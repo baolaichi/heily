@@ -5,6 +5,7 @@ import {
   AlertCircle, Edit3, Trash2, Plus, RotateCcw, Save, X 
 } from 'lucide-react';
 import { coupleConfig } from '../data/config';
+import { syncPushCapsules, syncPullCapsules, subscribeToFirebase } from '../utils/cloudSync';
 import VietnameseDatePicker from './VietnameseDatePicker';
 import { formatVietnameseFull, formatVietnameseDateOnly } from '../utils/dateUtils';
 
@@ -16,7 +17,7 @@ export default function TimeCapsule() {
     } catch (e) {
       console.error(e);
     }
-    return coupleConfig.timeCapsules;
+    return coupleConfig.timeCapsules || [];
   });
 
   const [selectedCapsule, setSelectedCapsule] = useState(null);
@@ -35,7 +36,32 @@ export default function TimeCapsule() {
   // Form Chỉnh Sửa Thư
   const [editingCapsule, setEditingCapsule] = useState(null);
 
-  // Lưu tự động vào LocalStorage mỗi khi capsules thay đổi
+  // Kéo thư từ Firebase & lắng nghe thời gian thực tức thì
+  useEffect(() => {
+    syncPullCapsules().then((remoteList) => {
+      if (Array.isArray(remoteList) && remoteList.length > 0) {
+        setCapsules(remoteList);
+        try {
+          localStorage.setItem('heily_time_capsules', JSON.stringify(remoteList));
+        } catch (e) {}
+      }
+    });
+
+    const unsubscribe = subscribeToFirebase('capsules', (remoteList) => {
+      if (Array.isArray(remoteList)) {
+        setCapsules(remoteList);
+        try {
+          localStorage.setItem('heily_time_capsules', JSON.stringify(remoteList));
+        } catch (e) {}
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
+  // Lưu tự động vào LocalStorage và đẩy lên Firebase đồng bộ 2 máy
   const saveAllCapsules = (newList) => {
     setCapsules(newList);
     try {
@@ -43,6 +69,7 @@ export default function TimeCapsule() {
     } catch (e) {
       console.error('Failed to save capsules:', e);
     }
+    syncPushCapsules(newList);
   };
 
   const handleUnlockWithPasscode = (capsule) => {

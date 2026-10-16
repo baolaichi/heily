@@ -3,6 +3,7 @@ import { coupleConfig as defaultConfig } from '../data/config';
 import { saveSongToDB, getAllSongsFromDB, deleteSongFromDB } from '../utils/musicDB';
 import { 
   syncPushToCloud, syncPullFromCloud, 
+  subscribeToFirebase,
   generateSyncCode, parseSyncCode, 
   getFirebaseUrl, setFirebaseUrl 
 } from '../utils/cloudSync';
@@ -40,19 +41,42 @@ export function CoupleProvider({ children }) {
     loadCustomSongs();
   }, []);
 
-  // Tự động kéo dữ liệu từ đám mây (Cloud Sync) khi mở trang & khi quay lại tab
+  // Tự động kéo dữ liệu từ đám mây (Cloud Sync) và lắng nghe SSE Realtime
   useEffect(() => {
     checkCloudUpdates();
+
+    // Lắng nghe cập nhật thời gian thực bằng Firebase SSE (Real-time tức thì)
+    const unsubscribe = subscribeToFirebase('coupleData', (remoteData) => {
+      if (remoteData && remoteData.boy && remoteData.girl) {
+        setCoupleData((prev) => {
+          const merged = {
+            ...prev,
+            ...remoteData,
+            boy: { ...prev.boy, ...(remoteData.boy || {}) },
+            girl: { ...prev.girl, ...(remoteData.girl || {}) },
+            events: Array.isArray(remoteData.events) ? remoteData.events : prev.events,
+          };
+          try {
+            localStorage.setItem('couple_custom_data', JSON.stringify(merged));
+          } catch (e) {}
+          setCloudStatus('synced');
+          return merged;
+        });
+      }
+    });
 
     const handleFocus = () => {
       checkCloudUpdates();
     };
 
     window.addEventListener('focus', handleFocus);
-    const interval = setInterval(checkCloudUpdates, 20000); // 20s tự kiểm tra đồng bộ
+    window.addEventListener('visibilitychange', handleFocus);
+    const interval = setInterval(checkCloudUpdates, 8000); // 8s tự kiểm tra đồng bộ dự phòng
 
     return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('visibilitychange', handleFocus);
       clearInterval(interval);
     };
   }, []);

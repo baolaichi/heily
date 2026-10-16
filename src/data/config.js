@@ -2,8 +2,8 @@ export const coupleConfig = {
   // Cờ báo hiệu chưa thiết lập (để người dùng tự nhập 100%)
   isConfigured: false,
 
-  // Đường link Firebase Realtime Database để đồng bộ tự động 2 máy mọi lúc mọi nơi
-  firebaseUrl: "",
+  // Đường link Firebase Realtime Database kết nối chung cho 2 máy (Tự động đồng bộ tức thì)
+  firebaseUrl: "https://bimatdoita-default-rtdb.firebaseio.com/",
 
   // Thông tin cặp đôi mặc định sạch (Không có bất kỳ thông tin giả nào)
   boy: {

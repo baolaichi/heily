@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { coupleConfig } from '../data/config';
 import { getMemoriesFromDB, saveMemoryToDB, deleteMemoryFromDB, clearAllDefaultMemories } from '../utils/memoriesDB';
+import { syncPushMemories, syncPullMemories, subscribeToFirebase } from '../utils/cloudSync';
 import { formatVietnameseFull, formatVietnameseDateOnly } from '../utils/dateUtils';
 import AddMemoryModal from './AddMemoryModal';
 
@@ -17,28 +18,52 @@ export default function MemoryTimeline() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('all'); // 'all' | 'video' | 'image'
 
-  // Load memories from IndexedDB on startup
+  // Tải kỷ niệm từ IndexedDB & Firebase khi khởi động
   useEffect(() => {
     loadAllMemories();
+
+    // Kéo dữ liệu kỷ niệm từ đám mây Firebase
+    syncPullMemories().then(async (remoteItems) => {
+      if (Array.isArray(remoteItems) && remoteItems.length > 0) {
+        for (const item of remoteItems) {
+          await saveMemoryToDB(item);
+        }
+        await loadAllAllMemoriesForce();
+      }
+    });
+
+    // Lắng nghe cập nhật kỷ niệm thời gian thực (SSE)
+    const unsubscribe = subscribeToFirebase('memories', async (remoteItems) => {
+      if (Array.isArray(remoteItems)) {
+        for (const item of remoteItems) {
+          await saveMemoryToDB(item);
+        }
+        await loadAllAllMemoriesForce();
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
 
   const loadAllMemories = async () => {
     try {
-      // Dọn sạch hoàn toàn các dữ liệu mẫu (mock/hardcode) nếu còn sót trong máy
       await clearAllDefaultMemories();
       const dbItems = await getMemoriesFromDB();
-      // Chỉ giữ lại những kỷ niệm thật do người dùng tự thêm
       const realItems = (dbItems || []).filter((item) => !String(item.id).startsWith('default-'));
       realItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setMemories(realItems);
     } catch (err) {
-      console.error('Lỗi khi tải kỷ niệm từ IndexedDB:', err);
+      console.error('Lỗi khi tải kỷ niệm:', err);
     }
   };
 
   const handleAddMemory = async (newMemory) => {
     await saveMemoryToDB(newMemory);
-    await loadAllAllMemoriesForce();
+    const updated = await loadAllAllMemoriesForce();
+    // Đẩy danh sách kỷ niệm mới lên Firebase đồng bộ 2 máy
+    if (updated) syncPushMemories(updated);
   };
 
   const loadAllAllMemoriesForce = async () => {
@@ -46,13 +71,16 @@ export default function MemoryTimeline() {
     const realItems = (items || []).filter((item) => !String(item.id).startsWith('default-'));
     realItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setMemories(realItems);
+    return realItems;
   };
 
   const handleDeleteMemory = async (id, e) => {
     e.stopPropagation();
     if (window.confirm('Bạn có chắc muốn xóa kỷ niệm này?')) {
       await deleteMemoryFromDB(id);
-      setMemories((prev) => prev.filter((m) => m.id !== id));
+      const remaining = memories.filter((m) => m.id !== id);
+      setMemories(remaining);
+      syncPushMemories(remaining);
       if (selectedItem?.id === id) setSelectedItem(null);
     }
   };

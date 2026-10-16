@@ -3,6 +3,7 @@ import {
   X, Camera, Video, MapPin, Tag, Calendar, 
   Sparkles, Upload, Save, Check, Link 
 } from 'lucide-react';
+import { compressImageToBase64 } from '../utils/cloudSync';
 import VietnameseDatePicker from './VietnameseDatePicker';
 import { formatVietnameseFull } from '../utils/dateUtils';
 
@@ -51,6 +52,14 @@ export default function AddMemoryModal({ isOpen, onClose, onSaveMemory }) {
 
     setIsSaving(true);
     try {
+      let finalMediaUrl = mediaUrl.trim();
+      if (uploadMode === 'file' && selectedFile) {
+        finalMediaUrl = await compressImageToBase64(selectedFile, 1000, 0.75);
+      }
+      if (!finalMediaUrl) {
+        finalMediaUrl = previewSrc || 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=800&auto=format&fit=crop';
+      }
+
       const newMemory = {
         id: `memory-${Date.now()}`,
         title: title.trim(),
@@ -59,8 +68,7 @@ export default function AddMemoryModal({ isOpen, onClose, onSaveMemory }) {
         tag: tag,
         description: description.trim(),
         mediaType: mediaType,
-        mediaBlob: selectedFile || null,
-        mediaUrl: uploadMode === 'url' ? mediaUrl.trim() : (previewSrc || 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=800&auto=format&fit=crop'),
+        mediaUrl: finalMediaUrl,
         likes: 0,
         createdAt: new Date().toISOString(),
       };
