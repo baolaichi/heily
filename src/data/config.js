@@ -2,6 +2,9 @@ export const coupleConfig = {
   // Cờ báo hiệu chưa thiết lập (để người dùng tự nhập 100%)
   isConfigured: false,
 
+  // Đường link Firebase Realtime Database để đồng bộ tự động 2 máy mọi lúc mọi nơi
+  firebaseUrl: "",
+
   // Thông tin cặp đôi mặc định sạch (Không có bất kỳ thông tin giả nào)
   boy: {
     name: "Chàng Trai",

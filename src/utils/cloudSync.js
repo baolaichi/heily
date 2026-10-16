@@ -5,13 +5,20 @@
  * 2. Mã đồng bộ 1 chạm (Sync Code): Sao chép từ máy này và Dán vào máy kia
  */
 
+import { coupleConfig } from '../data/config';
+
 const FIREBASE_URL_KEY = 'heily_firebase_sync_url';
 
 export function getFirebaseUrl() {
   try {
-    return localStorage.getItem(FIREBASE_URL_KEY) || '';
+    return (
+      localStorage.getItem(FIREBASE_URL_KEY) ||
+      import.meta.env.VITE_FIREBASE_URL ||
+      coupleConfig.firebaseUrl ||
+      ''
+    );
   } catch {
-    return '';
+    return coupleConfig?.firebaseUrl || '';
   }
 }
 
