@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { coupleConfig as defaultConfig } from '../data/config';
 import { saveSongToDB, getAllSongsFromDB, deleteSongFromDB } from '../utils/musicDB';
+import { 
+  syncPushToCloud, syncPullFromCloud, 
+  generateSyncCode, parseSyncCode, 
+  getFirebaseUrl, setFirebaseUrl 
+} from '../utils/cloudSync';
 
 const CoupleContext = createContext(null);
 
@@ -15,9 +20,7 @@ export function CoupleProvider({ children }) {
           ...parsed,
           boy: { ...defaultConfig.boy, ...(parsed.boy || {}) },
           girl: { ...defaultConfig.girl, ...(parsed.girl || {}) },
-          events: Array.isArray(parsed.events) && parsed.events.length > 0
-            ? parsed.events
-            : defaultConfig.events,
+          events: Array.isArray(parsed.events) ? parsed.events : [],
         };
       }
     } catch (e) {
@@ -29,16 +32,61 @@ export function CoupleProvider({ children }) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [customSongs, setCustomSongs] = useState([]);
   const [activePlaylist, setActivePlaylist] = useState(defaultConfig.playlist);
+  const [cloudStatus, setCloudStatus] = useState('idle'); // 'idle' | 'syncing' | 'synced' | 'error'
+  const [firebaseUrl, setFirebaseUrlState] = useState(() => getFirebaseUrl());
 
   // Tải danh sách bài hát tự upload từ IndexedDB khi mở trang
   useEffect(() => {
     loadCustomSongs();
   }, []);
 
+  // Tự động kéo dữ liệu từ đám mây (Cloud Sync) khi mở trang & khi quay lại tab
+  useEffect(() => {
+    checkCloudUpdates();
+
+    const handleFocus = () => {
+      checkCloudUpdates();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    const interval = setInterval(checkCloudUpdates, 20000); // 20s tự kiểm tra đồng bộ
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const checkCloudUpdates = async () => {
+    const cloudData = await syncPullFromCloud();
+    if (cloudData && cloudData.boy && cloudData.girl) {
+      setCoupleData((prev) => {
+        // Chỉ cập nhật nếu cloud có ngày cập nhật mới hơn
+        const prevTime = prev.lastUpdated ? new Date(prev.lastUpdated).getTime() : 0;
+        const cloudTime = cloudData.lastUpdated ? new Date(cloudData.lastUpdated).getTime() : 0;
+
+        if (cloudTime >= prevTime) {
+          const merged = {
+            ...prev,
+            ...cloudData,
+            boy: { ...prev.boy, ...(cloudData.boy || {}) },
+            girl: { ...prev.girl, ...(cloudData.girl || {}) },
+            events: Array.isArray(cloudData.events) ? cloudData.events : prev.events,
+          };
+          try {
+            localStorage.setItem('couple_custom_data', JSON.stringify(merged));
+          } catch (e) {}
+          setCloudStatus('synced');
+          return merged;
+        }
+        return prev;
+      });
+    }
+  };
+
   const loadCustomSongs = async () => {
     try {
       const dbSongs = await getAllSongsFromDB();
-      // Chuyển Blob thành URL phát nhạc
       const formatted = dbSongs.map((s) => ({
         ...s,
         url: URL.createObjectURL(s.blob),
@@ -50,7 +98,6 @@ export function CoupleProvider({ children }) {
     }
   };
 
-  // Upload bài hát mới
   const uploadCustomSong = async (file, title, artist) => {
     if (!file) return;
 
@@ -66,7 +113,6 @@ export function CoupleProvider({ children }) {
 
     await saveSongToDB(newSong);
 
-    // Cập nhật state
     const playableSong = {
       ...newSong,
       url: URL.createObjectURL(file),
@@ -77,29 +123,36 @@ export function CoupleProvider({ children }) {
     return playableSong;
   };
 
-  // Xóa bài hát tự tải lên
   const removeCustomSong = async (id) => {
     await deleteSongFromDB(id);
     setCustomSongs((prev) => prev.filter((s) => s.id !== id));
     setActivePlaylist((prev) => prev.filter((s) => s.id !== id));
   };
 
-  // Lưu tự động vào localStorage mỗi khi coupleData thay đổi
+  // Lưu thông tin và tự động đẩy lên Cloud Sync
   const saveCoupleData = (newData) => {
-    setCoupleData((prev) => {
-      const updated = {
-        ...prev,
-        ...newData,
-        boy: { ...prev.boy, ...(newData.boy || {}) },
-        girl: { ...prev.girl, ...(newData.girl || {}) },
-        events: Array.isArray(newData.events) ? newData.events : prev.events,
-      };
-      try {
-        localStorage.setItem('couple_custom_data', JSON.stringify(updated));
-      } catch (err) {
-        console.error('Failed to save to localStorage:', err);
-      }
-      return updated;
+    const updated = {
+      ...coupleData,
+      ...newData,
+      isConfigured: true,
+      lastUpdated: new Date().toISOString(),
+      boy: { ...coupleData.boy, ...(newData.boy || {}) },
+      girl: { ...coupleData.girl, ...(newData.girl || {}) },
+      events: Array.isArray(newData.events) ? newData.events : coupleData.events,
+    };
+
+    setCoupleData(updated);
+
+    try {
+      localStorage.setItem('couple_custom_data', JSON.stringify(updated));
+    } catch (err) {
+      console.error('Failed to save to localStorage:', err);
+    }
+
+    // Đẩy lên đám mây ngay lập tức để thiết bị khác nhận được
+    setCloudStatus('syncing');
+    syncPushToCloud(updated).then((ok) => {
+      setCloudStatus(ok ? 'synced' : 'idle');
     });
   };
 
@@ -120,15 +173,44 @@ export function CoupleProvider({ children }) {
     saveCoupleData({ events: updatedEvents });
   };
 
-  // Khôi phục mặc định
+  // Cập nhật Firebase Realtime Database URL
+  const updateFirebaseUrl = async (url) => {
+    setFirebaseUrl(url);
+    setFirebaseUrlState(url);
+    if (url.trim()) {
+      setCloudStatus('syncing');
+      // Đẩy dữ liệu hiện tại lên
+      const ok = await syncPushToCloud(coupleData);
+      setCloudStatus(ok ? 'synced' : 'error');
+      // Kéo dữ liệu về thử
+      await checkCloudUpdates();
+    } else {
+      setCloudStatus('idle');
+    }
+  };
+
+  // Xuất mã đồng bộ 1 chạm
+  const exportMySyncCode = () => {
+    return generateSyncCode(coupleData);
+  };
+
+  // Nhập mã đồng bộ 1 chạm từ máy khác
+  const importMySyncCode = (codeStr) => {
+    const parsed = parseSyncCode(codeStr);
+    if (!parsed || !parsed.boy || !parsed.girl) {
+      throw new Error('Mã đồng bộ không hợp lệ hoặc bị lỗi!');
+    }
+    saveCoupleData(parsed);
+    return true;
+  };
+
   const resetToDefault = () => {
     localStorage.removeItem('couple_custom_data');
     setCoupleData(defaultConfig);
   };
 
-  // Hàm tính toán sự kiện sắp diễn ra gần nhất
   const getClosestEvent = () => {
-    const list = coupleData.events || defaultConfig.events || [];
+    const list = coupleData.events || [];
     if (list.length === 0) {
       return coupleData.nextEvent || defaultConfig.nextEvent;
     }
@@ -137,7 +219,7 @@ export function CoupleProvider({ children }) {
     const upcoming = list.filter((e) => new Date(e.date).getTime() >= now - 86400000);
 
     if (upcoming.length > 0) {
-      upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(a.date).getTime());
       return upcoming[0];
     }
 
@@ -160,6 +242,13 @@ export function CoupleProvider({ children }) {
         customSongs,
         uploadCustomSong,
         removeCustomSong,
+        // Cloud Sync capabilities
+        cloudStatus,
+        firebaseUrl,
+        updateFirebaseUrl,
+        exportMySyncCode,
+        importMySyncCode,
+        checkCloudUpdates,
       }}
     >
       {children}

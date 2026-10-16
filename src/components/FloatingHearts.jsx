@@ -12,7 +12,7 @@ export default function FloatingHearts() {
         // Vẫn tạo tim nhỏ quanh nút
       }
 
-      const sweetWords = ["💖", "✨", "Yêu em", "💕", "Heily", "❤️", "Bé cưng", "🌸", "🌹", "Mãi yêu"];
+      const sweetWords = ["💖", "✨", "Yêu em", "💕", "Thương em", "❤️", "Bé cưng", "🌸", "🌹", "Mãi yêu"];
       const randomWord = sweetWords[Math.floor(Math.random() * sweetWords.length)];
       
       const newHeart = {

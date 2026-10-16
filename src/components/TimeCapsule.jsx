@@ -342,11 +342,33 @@ export default function TimeCapsule() {
       )}
 
       {/* DANH SÁCH CÁC HỘP THƯ (CAPSULES GRID) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {capsules.map((capsule) => {
-          const isDatePassed = new Date(capsule.unlockDate) <= new Date();
-          const isManuallyUnlocked = unlockedIds.includes(capsule.id);
-          const isUnlocked = !capsule.isLocked || isDatePassed || isManuallyUnlocked;
+      {capsules.length === 0 ? (
+        <div className="glass-card rounded-3xl p-8 sm:p-12 text-center max-w-lg mx-auto border border-rose-200 shadow-md space-y-4 my-4 animate-in fade-in">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-rose-100 flex items-center justify-center text-3xl sm:text-4xl shadow-inner">
+            💌
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="font-serif font-bold text-lg sm:text-2xl text-slate-800">
+              Hộp thư thời gian đang trống
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
+              Hãy viết một bức thư ngọt ngào gửi gắm tâm sự cho người ấy và đặt lịch hẹn mở vào sinh nhật, lễ kỷ niệm hay một ngày đặc biệt trong tương lai nhé! 🔐
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white font-semibold text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Viết Bức Thư Hẹn Giờ Đầu Tiên</span>
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {capsules.map((capsule) => {
+            const isDatePassed = new Date(capsule.unlockDate) <= new Date();
+            const isManuallyUnlocked = unlockedIds.includes(capsule.id);
+            const isUnlocked = !capsule.isLocked || isDatePassed || isManuallyUnlocked;
 
           return (
             <div
@@ -443,6 +465,7 @@ export default function TimeCapsule() {
           );
         })}
       </div>
+      )}
 
       {/* Capsule Content / Passcode Dialog Modal */}
       {selectedCapsule && (

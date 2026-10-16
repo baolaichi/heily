@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { 
   X, Camera, Heart, Calendar, Sparkles, Check, 
-  RotateCcw, Trash2, Plus, Save, Clock, Music, Upload, Disc 
+  RotateCcw, Trash2, Plus, Save, Clock, Music, Upload, Disc,
+  Cloud, Copy, CheckCheck, RefreshCw, Smartphone, Laptop, Link2, ExternalLink
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import VietnameseDatePicker from './VietnameseDatePicker';
@@ -11,10 +12,12 @@ export default function SettingsModal() {
   const { 
     coupleData, saveCoupleData, addEvent, deleteEvent, 
     resetToDefault, isSettingsOpen, setIsSettingsOpen,
-    activePlaylist, uploadCustomSong, removeCustomSong 
+    activePlaylist, uploadCustomSong, removeCustomSong,
+    cloudStatus, firebaseUrl, updateFirebaseUrl, 
+    exportMySyncCode, importMySyncCode, checkCloudUpdates
   } = useCouple();
 
-  const [activeSubTab, setActiveSubTab] = useState('couple'); // 'couple' | 'events' | 'music'
+  const [activeSubTab, setActiveSubTab] = useState('couple'); // 'couple' | 'events' | 'music' | 'sync'
 
   // Couple state
   const [boyName, setBoyName] = useState(coupleData.boy.name);
@@ -38,6 +41,12 @@ export default function SettingsModal() {
   const [songTitle, setSongTitle] = useState('');
   const [songArtist, setSongArtist] = useState('');
   const [isUploadingMusic, setIsUploadingMusic] = useState(false);
+
+  // Cloud Sync state
+  const [firebaseInput, setFirebaseInput] = useState(firebaseUrl || '');
+  const [syncCodeInput, setSyncCodeInput] = useState('');
+  const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState('');
 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const boyFileInputRef = useRef(null);
@@ -220,6 +229,20 @@ export default function SettingsModal() {
             >
               <Music className="w-3.5 h-3.5" />
               <span>Playlist & Tải Nhạc ({activePlaylist.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveSubTab('sync')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1.5 ${
+                activeSubTab === 'sync'
+                  ? 'bg-rose-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 hover:bg-rose-50 border border-rose-100'
+              }`}
+            >
+              <Cloud className="w-3.5 h-3.5 text-sky-500" />
+              <span>Đồng Bộ Đa Thiết Bị ☁️</span>
+              {cloudStatus === 'synced' && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              )}
             </button>
           </div>
         </div>
@@ -591,6 +614,150 @@ export default function SettingsModal() {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 4: ĐỒNG BỘ ĐA THIẾT BỊ (CROSS-DEVICE SYNC) */}
+        {activeSubTab === 'sync' && (
+          <div className="space-y-5 animate-in fade-in">
+            {/* Header info */}
+            <div className="bg-rose-50/80 p-4 rounded-2xl border border-rose-200">
+              <h4 className="font-serif font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                <Cloud className="w-4 h-4 text-rose-500" />
+                <span>Đồng Bộ Giữa Các Thiết Bị (Điện Thoại & Máy Tính)</span>
+              </h4>
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                Để khi bạn sửa thông tin trên điện thoại thì máy tính hoặc máy của bạn gái cũng tự động có dữ liệu, hãy dùng 1 trong 2 cách siêu tiện lợi bên dưới:
+              </p>
+            </div>
+
+            {/* CÁCH 1: MÃ ĐỒNG BỘ 1 CHẠM (NHANH NHẤT - KHÔNG CẦN CÀI ĐẶT GÌ) */}
+            <div className="bg-white/95 p-5 rounded-2xl border border-rose-200 shadow-xs space-y-3.5">
+              <div>
+                <h5 className="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4 text-rose-500" />
+                  <span>Cách 1: Mã Đồng Bộ 1 Chạm (Sao chép & Dán trực tiếp)</span>
+                </h5>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Máy đã có thông tin bấm <strong>"Sao chép"</strong> ➔ Sang máy kia bấm <strong>"Dán"</strong> là đồng bộ xong 100% trong 2 giây!
+                </p>
+              </div>
+
+              {/* Nút sao chép mã */}
+              <button
+                type="button"
+                onClick={() => {
+                  const code = exportMySyncCode();
+                  navigator.clipboard.writeText(code);
+                  setCopyCodeSuccess(true);
+                  setSyncFeedback('✅ Đã sao chép mã đồng bộ vào bộ nhớ tạm! Hãy gửi mã này sang máy kia và dán vào nhé.');
+                  setTimeout(() => setCopyCodeSuccess(false), 3000);
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-semibold shadow-md flex items-center justify-center gap-2 hover:scale-102 transition"
+              >
+                {copyCodeSuccess ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copyCodeSuccess ? 'Đã Sao Chép Mã Đồng Bộ!' : '📋 Bước 1: Bấm Để Sao Chép Mã Đồng Bộ Từ Máy Này'}</span>
+              </button>
+
+              {/* Ô dán mã đồng bộ */}
+              <div className="pt-2 border-t border-rose-100 space-y-1.5">
+                <label className="block text-[11px] font-semibold text-slate-700">
+                  Bước 2: Mở máy kia lên, dán mã đồng bộ vào đây để nhận dữ liệu:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Dán mã đồng bộ vào đây..."
+                    value={syncCodeInput}
+                    onChange={(e) => setSyncCodeInput(e.target.value)}
+                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!syncCodeInput.trim()) {
+                        alert('Vui lòng dán mã đồng bộ trước nhé!');
+                        return;
+                      }
+                      try {
+                        importMySyncCode(syncCodeInput);
+                        setSyncFeedback('🎉 Đồng bộ dữ liệu thành công! Trang web đã nhận 100% thông tin.');
+                        setSyncCodeInput('');
+                      } catch (err) {
+                        alert(err.message);
+                      }
+                    }}
+                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-xs transition shrink-0"
+                  >
+                    Đồng Bộ Ngay
+                  </button>
+                </div>
+              </div>
+
+              {syncFeedback && (
+                <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-medium animate-in fade-in">
+                  {syncFeedback}
+                </div>
+              )}
+            </div>
+
+            {/* CÁCH 2: ĐỒNG BỘ ĐÁM MÂY TỰ ĐỘNG 24/7 (FIREBASE REALTIME DATABASE) */}
+            <div className="bg-white/95 p-5 rounded-2xl border border-rose-200 shadow-xs space-y-3.5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h5 className="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-1.5">
+                    <Cloud className="w-4 h-4 text-sky-500" />
+                    <span>Cách 2: Đồng Bộ Đám Mây Tự Động 24/7 (Real-time Live Sync)</span>
+                  </h5>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Cứ máy này sửa gì, máy người yêu lập tức nhảy dữ liệu mới trong 1 giây hoàn toàn tự động!
+                  </p>
+                </div>
+                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0 ${
+                  cloudStatus === 'synced' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  {cloudStatus === 'synced' ? '☁️ Đã Kết Nối' : 'Chưa Kết Nối'}
+                </span>
+              </div>
+
+              <div className="text-[11px] text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                <p className="font-semibold text-slate-700">Hướng dẫn kết nối trong 1 phút (Miễn phí 100% vĩnh viễn):</p>
+                <p>1. Vào <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-rose-600 font-semibold underline">console.firebase.google.com</a> ➔ Tạo Project miễn phí.</p>
+                <p>2. Chọn menu <strong>Realtime Database</strong> ➔ Bấm <strong>Tạo Database</strong> (chọn Test mode).</p>
+                <p>3. Copy đường link Database (dạng <code>https://...-default-rtdb.firebaseio.com/</code>) dán vào ô bên dưới:</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-semibold text-slate-700">
+                  Đường link Firebase Realtime Database của bạn:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="VD: https://bimatdoita-default-rtdb.firebaseio.com/"
+                    value={firebaseInput}
+                    onChange={(e) => setFirebaseInput(e.target.value)}
+                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!firebaseInput.trim()) {
+                        await updateFirebaseUrl('');
+                        alert('Đã xóa cấu hình đám mây.');
+                        return;
+                      }
+                      await updateFirebaseUrl(firebaseInput);
+                      alert('Đã lưu cấu hình đám mây! Hệ thống đang tự động đồng bộ.');
+                    }}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-semibold shadow hover:scale-102 transition shrink-0"
+                  >
+                    Lưu & Kết Nối
+                  </button>
+                </div>
               </div>
             </div>
 
