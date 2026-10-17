@@ -26,11 +26,40 @@ export default function CoupleChat() {
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const chatBoxRef = useRef(null);
 
   // Role: 'boy' | 'girl'
   const [userRole, setUserRole] = useState(() => {
     return localStorage.getItem(CHAT_ROLE_KEY) || '';
   });
+
+  // Đóng khung chat khi nhấn phím Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        setShowRolePicker(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Đóng khung chat khi bấm chuột ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!isOpen) return;
+      if (
+        chatBoxRef.current && 
+        !chatBoxRef.current.contains(e.target) && 
+        !e.target.closest('#chat-trigger-btn')
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
 
   const boyName = coupleData?.boy?.nickname || coupleData?.boy?.name || 'Anh';
   const girlName = coupleData?.girl?.nickname || coupleData?.girl?.name || 'Em';
@@ -215,6 +244,7 @@ export default function CoupleChat() {
 
       {/* NÚT BÓNG CHAT NỔI (Floating Chat Trigger) */}
       <button
+        id="chat-trigger-btn"
         onClick={() => {
           setIsOpen(!isOpen);
           if (!userRole) setShowRolePicker(true);
@@ -235,37 +265,46 @@ export default function CoupleChat() {
         </span>
       </button>
 
-      {/* KHUNG CHAT (Bottom Sheet on Mobile / Messenger Popup on Desktop) */}
+      {/* KHUNG CHAT (Bottom Sheet on Mobile / Compact Popup on Desktop) */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-end justify-center sm:justify-start sm:p-6 bg-slate-950/40 sm:bg-slate-950/20 backdrop-blur-sm sm:backdrop-blur-none animate-in fade-in duration-200">
-          <div className="bg-gradient-to-b from-rose-50/98 via-white/98 to-pink-50/98 w-full sm:w-[400px] h-[90vh] sm:h-[580px] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-rose-200/90 flex flex-col overflow-hidden pb-safe relative sm:mb-16">
-            
+        <>
+          {/* Backdrop tối nhẹ trên mobile - chạm ra ngoài là đóng ngay */}
+          <div
+            className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs sm:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Cửa sổ chat nhỏ gọn vừa vặn mọi màn hình laptop/desktop */}
+          <div
+            ref={chatBoxRef}
+            className="fixed z-50 bottom-0 sm:bottom-20 left-0 sm:left-6 w-full sm:w-[360px] h-[82vh] sm:h-[480px] max-h-[calc(100vh-95px)] bg-gradient-to-b from-rose-50/98 via-white/98 to-pink-50/98 rounded-t-3xl sm:rounded-2xl shadow-2xl border border-rose-200/90 flex flex-col overflow-hidden pb-safe animate-in fade-in slide-in-from-bottom-3 duration-200"
+          >
             {/* Header */}
-            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white flex items-center justify-between shadow-md">
-              <div className="flex items-center gap-3">
-                <div className="flex -space-x-2">
+            <div className="p-3 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white flex items-center justify-between shadow-md select-none shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="flex -space-x-1.5">
                   <img
                     src={boyAvatar}
                     alt={boyName}
-                    className="w-9 h-9 rounded-full border-2 border-white object-cover bg-white shadow-sm"
+                    className="w-8 h-8 rounded-full border-2 border-white object-cover bg-white shadow-sm"
                   />
                   <img
                     src={girlAvatar}
                     alt={girlName}
-                    className="w-9 h-9 rounded-full border-2 border-white object-cover bg-white shadow-sm"
+                    className="w-8 h-8 rounded-full border-2 border-white object-cover bg-white shadow-sm"
                   />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm sm:text-base flex items-center gap-1.5 leading-tight">
+                  <h3 className="font-semibold text-xs sm:text-sm flex items-center gap-1.5 leading-tight">
                     Hộp Chat Đôi Ta
                     <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                   </h3>
                   <button
                     onClick={() => setShowRolePicker(true)}
-                    className="text-xs text-rose-100 hover:text-white flex items-center gap-1 mt-0.5 underline decoration-dotted"
+                    className="text-[11px] text-rose-100 hover:text-white flex items-center gap-1 mt-0.5 underline decoration-dotted"
                   >
-                    Đang là: <span className="font-bold">{currentName}</span>
-                    <RefreshCw className="w-3 h-3 ml-0.5 opacity-80" />
+                    Là: <span className="font-bold">{currentName}</span>
+                    <RefreshCw className="w-2.5 h-2.5 ml-0.5 opacity-80" />
                   </button>
                 </div>
               </div>
@@ -274,13 +313,14 @@ export default function CoupleChat() {
                 <button
                   onClick={handleSendHeartBomb}
                   title="Bắn tim cho người ấy"
-                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 active:scale-90 flex items-center justify-center transition text-white"
+                  className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 active:scale-90 flex items-center justify-center transition text-white"
                 >
-                  <Heart className="w-4 h-4 fill-white" />
+                  <Heart className="w-3.5 h-3.5 fill-white" />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 active:scale-90 flex items-center justify-center transition text-white"
+                  title="Đóng chat (Esc hoặc chạm ra ngoài)"
+                  className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/40 active:scale-90 flex items-center justify-center transition text-white"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -543,7 +583,7 @@ export default function CoupleChat() {
             )}
 
           </div>
-        </div>
+        </>
       )}
     </>
   );
