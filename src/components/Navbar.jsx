@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Heart, Gamepad2, CalendarHeart, Mail, Settings,
   Bell, BellRing, ListTodo, Sprout, HeartPulse, ShieldCheck, 
-  KeyRound, Eye, EyeOff, X 
+  KeyRound, Eye, EyeOff, X, Sparkles 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useCouple } from '../context/CoupleContext';
@@ -37,6 +37,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
 
   const tabs = [
     { id: 'home', label: 'Trang Chủ', icon: Heart, shortLabel: 'Trang Chủ' },
+    { id: 'wishes', label: 'Vũ Trụ Lời Chúc', icon: Sparkles, shortLabel: 'Lời Chúc' },
     { id: 'bucketlist', label: 'Ước Mơ', icon: ListTodo, shortLabel: 'Ước Mơ' },
     { id: 'plant', label: 'Cây Yêu', icon: Sprout, shortLabel: 'Cây Yêu' },
     { id: 'heartbeat', label: 'Chạm Tay', icon: HeartPulse, shortLabel: 'Chạm Tay' },

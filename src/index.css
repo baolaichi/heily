@@ -102,3 +102,363 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #fb7185;
 }
+
+/* ================= VŨ TRỤ LỜI CHÚC & HỘP QUÀ KỶ NIỆM (COSMIC MULTIVERSE) ================= */
+.font-cinzel {
+  font-family: 'Cinzel Decorative', serif;
+}
+
+.gold-glow {
+  text-shadow: 0 0 15px rgba(230, 202, 133, 0.8), 0 0 30px rgba(244, 114, 182, 0.5);
+}
+
+/* STAGE 1: ENVELOPE */
+.envelope-wrapper {
+  perspective: 1200px;
+  cursor: pointer;
+}
+
+.cosmic-envelope {
+  width: 260px;
+  height: 180px;
+  position: relative;
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 25px rgba(244, 114, 182, 0.25);
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+@media (min-width: 640px) {
+  .cosmic-envelope {
+    width: 380px;
+    height: 250px;
+  }
+}
+
+.cosmic-envelope .flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 130px solid transparent;
+  border-right: 130px solid transparent;
+  border-top: 105px solid #f472b6;
+  transform-origin: top;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.2s;
+  z-index: 5;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.2));
+}
+
+@media (min-width: 640px) {
+  .cosmic-envelope .flap {
+    border-left-width: 190px;
+    border-right-width: 190px;
+    border-top-width: 150px;
+  }
+}
+
+.cosmic-envelope .pocket {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.cosmic-envelope .pocket::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 130px solid #fbcfe8;
+  border-top: 90px solid transparent;
+  border-bottom: 90px solid #f9a8d4;
+  border-radius: 0 0 0 12px;
+}
+
+.cosmic-envelope .pocket::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-right: 130px solid #fbcfe8;
+  border-top: 90px solid transparent;
+  border-bottom: 90px solid #f9a8d4;
+  border-radius: 0 0 12px 0;
+}
+
+@media (min-width: 640px) {
+  .cosmic-envelope .pocket::before {
+    border-left-width: 190px;
+    border-top-width: 125px;
+    border-bottom-width: 125px;
+  }
+  .cosmic-envelope .pocket::after {
+    border-right-width: 190px;
+    border-top-width: 125px;
+    border-bottom-width: 125px;
+  }
+}
+
+.cosmic-letter {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: calc(100% - 20px);
+  height: calc(100% - 15px);
+  background: #fffdfa;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  transition: transform 1s cubic-bezier(0.34, 1.3, 0.64, 1);
+  z-index: 3;
+  color: #4a1d2e;
+}
+
+@media (min-width: 640px) {
+  .cosmic-letter {
+    top: 15px;
+    left: 15px;
+    width: calc(100% - 30px);
+    height: calc(100% - 25px);
+    padding: 18px;
+  }
+}
+
+.cosmic-wax-seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  background: radial-gradient(circle at 35% 30%, #ef4444, #991b1b 70%, #7f1d1d 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fef08a;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  z-index: 6;
+  transition: all 0.4s ease;
+}
+
+@media (min-width: 640px) {
+  .cosmic-wax-seal {
+    width: 58px;
+    height: 58px;
+  }
+}
+
+/* STAGE 2: BOUQUET & SPROUTING POLAROIDS */
+.bouquet-stage-wrapper {
+  perspective: 1200px;
+}
+
+.bouquet-card-box {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.bouquet-aura {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.45) 0%, rgba(230, 202, 133, 0.25) 45%, transparent 75%);
+  filter: blur(25px);
+  z-index: 1;
+  animation: auraPulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes auraPulse {
+  0% { transform: scale(0.92); opacity: 0.6; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+
+.bouquet-frame {
+  position: relative;
+  width: 200px;
+  height: 250px;
+  border-radius: 26px;
+  overflow: visible;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .bouquet-frame {
+    width: 360px;
+    height: 420px;
+    border-radius: 36px;
+  }
+}
+
+.realistic-bouquet-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 26px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7),
+              0 0 35px rgba(244, 114, 182, 0.4),
+              inset 0 0 20px rgba(0,0,0,0.3);
+  border: 2px solid rgba(250, 204, 21, 0.4);
+  transition: all 0.8s cubic-bezier(0.34, 1.4, 0.64, 1);
+  filter: saturate(1.15) contrast(1.05);
+}
+
+@media (min-width: 640px) {
+  .realistic-bouquet-img {
+    border-radius: 36px;
+    box-shadow: 0 30px 65px rgba(0, 0, 0, 0.8),
+                0 0 45px rgba(244, 114, 182, 0.5),
+                inset 0 0 25px rgba(0,0,0,0.4);
+  }
+}
+
+.bouquet-ribbon {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 15;
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .bouquet-ribbon {
+    bottom: -22px;
+  }
+}
+
+.ribbon-bow {
+  width: 105px;
+  height: 26px;
+  background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 50%, #b45309 100%);
+  border-radius: 13px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 2px 4px rgba(255,255,255,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+@media (min-width: 640px) {
+  .ribbon-bow {
+    width: 130px;
+    height: 32px;
+    font-size: 12px;
+    border-radius: 16px;
+  }
+}
+
+.floating-sparkle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #fef08a;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #fde047;
+  pointer-events: none;
+  animation: sparkleFly 3s infinite ease-in-out alternate;
+}
+
+@media (min-width: 640px) {
+  .floating-sparkle {
+    width: 6px;
+    height: 6px;
+    box-shadow: 0 0 12px #fde047;
+  }
+}
+
+@keyframes sparkleFly {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0.3; }
+  100% { transform: translate(15px, -20px) scale(1.3); opacity: 1; }
+}
+
+.sprouting-polaroid {
+  position: absolute;
+  background: #ffffff;
+  padding: 5px 5px 16px 5px;
+  border-radius: 6px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(244, 114, 182, 0.4);
+  border: 1.5px solid rgba(230, 202, 133, 0.8);
+  width: 95px;
+  height: 122px;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0) rotate(0deg);
+  transition: box-shadow 0.3s ease, filter 0.3s ease;
+  z-index: 30;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .sprouting-polaroid {
+    width: 155px;
+    height: 195px;
+    padding: 8px 8px 24px 8px;
+    border-radius: 8px;
+  }
+}
+
+.sprouting-polaroid img {
+  width: 100%;
+  height: calc(100% - 18px);
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+@media (min-width: 640px) {
+  .sprouting-polaroid img {
+    height: calc(100% - 24px);
+  }
+}
+
+.sprouting-polaroid .caption {
+  font-family: 'Dancing Script', cursive;
+  font-size: 0.75rem;
+  color: #701a35;
+  text-align: center;
+  font-weight: 700;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 640px) {
+  .sprouting-polaroid .caption {
+    font-size: 0.95rem;
+    margin-top: 4px;
+  }
+}
+
+.sprouting-polaroid::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 16px;
+  background: rgba(230, 202, 133, 0.85);
+  border-radius: 2px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+

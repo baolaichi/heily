@@ -15,6 +15,7 @@ import SettingsModal from './components/SettingsModal';
 import LockScreen from './components/LockScreen';
 import Footer from './components/Footer';
 import CoupleChat from './components/CoupleChat';
+import CosmicMultiverse from './components/CosmicMultiverse';
 
 function MainApp() {
   const [activeTab, setActiveTab] = useState('home');
@@ -52,7 +53,9 @@ function MainApp() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between relative selection:bg-rose-200 selection:text-rose-900 overflow-x-hidden">
+    <div className={`min-h-screen flex flex-col justify-between relative selection:bg-rose-200 selection:text-rose-900 ${
+      activeTab === 'wishes' ? 'overflow-hidden h-screen' : 'overflow-x-hidden'
+    }`}>
       {/* Background Floating Ambient Petals and Click Particles */}
       <FloatingHearts />
 
@@ -60,10 +63,21 @@ function MainApp() {
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-2.5 sm:px-4 pt-2 sm:pt-4 pb-24 sm:pb-16 relative z-20">
+      <main className={`flex-1 max-w-5xl w-full mx-auto px-2.5 sm:px-4 pt-2 sm:pt-4 relative z-20 ${
+        activeTab === 'wishes' ? 'pb-0 overflow-hidden' : 'pb-24 sm:pb-16'
+      }`}>
         {activeTab === 'home' && (
           <div className="animate-in fade-in duration-300">
-            <LoveCounter onNavigateToGame={() => setActiveTab('game')} />
+            <LoveCounter 
+              onNavigateToGame={() => setActiveTab('game')} 
+              onNavigateToWishes={() => setActiveTab('wishes')}
+            />
+          </div>
+        )}
+
+        {activeTab === 'wishes' && (
+          <div className="animate-in fade-in duration-300 h-full">
+            <CosmicMultiverse onBackToHome={() => setActiveTab('home')} />
           </div>
         )}
 
@@ -104,8 +118,10 @@ function MainApp() {
         )}
       </main>
 
-      {/* Footer */}
-      <Footer onTriggerLove={handleLoveClick} onLockPage={handleLockPage} />
+      {/* Footer - Ẩn hoàn toàn khi xem Vũ Trụ Lời Chúc */}
+      {activeTab !== 'wishes' && (
+        <Footer onTriggerLove={handleLoveClick} onLockPage={handleLockPage} />
+      )}
 
       {/* Settings Modal (Tùy chỉnh ngày yêu, upload avatar, biệt danh) */}
       <SettingsModal onLockPage={handleLockPage} />

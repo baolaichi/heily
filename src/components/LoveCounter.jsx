@@ -8,7 +8,7 @@ import { formatVietnameseFull, formatVietnameseShort } from '../utils/dateUtils'
 import AvatarStatusModal from './AvatarStatusModal';
 import LivePhotoWidget from './LivePhotoWidget';
 
-export default function LoveCounter({ onNavigateToGame }) {
+export default function LoveCounter({ onNavigateToGame, onNavigateToWishes }) {
   const { coupleData, setIsSettingsOpen, getClosestEvent, playTrackDirectly, myRole } = useCouple();
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -456,19 +456,60 @@ export default function LoveCounter({ onNavigateToGame }) {
         )}
       </div>
 
-      {/* CTA To Romantic Game */}
-      <div className="text-center pt-1 sm:pt-2">
-        <button
-          onClick={onNavigateToGame}
-          className="group inline-flex items-center space-x-2 sm:space-x-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-full font-semibold shadow-lg shadow-rose-300 hover:scale-105 active:scale-95 transition-all text-xs sm:text-base"
+      {/* Special Gifts & Romantic Interactive Portals */}
+      <div className="space-y-3 pt-2">
+        {/* Cosmic Multiverse Wishes Banner */}
+        <div 
+          onClick={onNavigateToWishes}
+          className="relative overflow-hidden rounded-3xl p-5 sm:p-6 text-white cursor-pointer group shadow-xl transition-all duration-300 hover:scale-[1.02] border border-pink-400/40"
+          style={{
+            background: 'radial-gradient(circle at 80% 20%, #4a0d33 0%, #200417 60%, #0d010b 100%)'
+          }}
         >
-          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-200 group-hover:rotate-12 transition" />
-          <span>Khám Phá Trò Chơi "Hành Trình Yêu Thương"</span>
-          <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition" />
-        </button>
-        <p className="mt-1.5 text-[11px] sm:text-xs text-slate-500 font-light">
-          Vượt qua 4 trạm thử thách để mở khóa bức tâm thư & điều bất ngờ 💌
-        </p>
+          {/* Background shimmering particles decoration */}
+          <div className="absolute -top-10 -right-10 w-36 h-36 bg-pink-500/25 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+          <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-purple-500/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-pink-500/30 border border-pink-300/40 text-[10px] font-bold text-pink-200 tracking-wider uppercase">
+                  ✦ Món Quà Vũ Trụ Đa Chiều ✦
+                </span>
+                <span className="text-yellow-300 text-xs animate-spin">✨</span>
+              </div>
+              <h4 className="text-lg sm:text-xl font-serif font-bold text-pink-100 flex items-center gap-2">
+                Vũ Trụ Lời Chúc & Ký Ức Đôi Ta
+              </h4>
+              <p className="text-xs text-pink-200/80 max-w-lg">
+                Mở lá thư tình sáp đỏ 💌 • Đánh thức bó hoa hồng nở ảnh 🌹 • Du hành không gian 360° với ngàn lời chúc ngọt ngào ✨
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="shrink-0 px-5 py-2.5 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white font-semibold text-xs tracking-wider uppercase shadow-lg shadow-pink-500/30 group-hover:shadow-pink-500/50 flex items-center gap-2 border border-white/30 transition-all pointer-events-none"
+            >
+              <span>Mở Món Quà</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition" />
+            </button>
+          </div>
+        </div>
+
+        {/* CTA To Romantic Game */}
+        <div className="text-center pt-1">
+          <button
+            onClick={onNavigateToGame}
+            className="group inline-flex items-center space-x-2 sm:space-x-3 px-6 sm:px-8 py-3 bg-gradient-to-r from-rose-500/90 via-pink-500/90 to-rose-600/90 text-white rounded-full font-semibold shadow-md shadow-rose-300/50 hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm border border-white/20"
+          >
+            <Sparkles className="w-4 h-4 text-yellow-200 group-hover:rotate-12 transition" />
+            <span>Chơi Mini Game "Hành Trình Yêu Thương"</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+          </button>
+          <p className="mt-1.5 text-[11px] text-slate-500 font-light">
+            Vượt qua 4 trạm thử thách để mở khóa điều bất ngờ 💌
+          </p>
+        </div>
       </div>
 
       {/* Modal Cập Nhật Status Avatar */}
