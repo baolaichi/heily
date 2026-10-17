@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Heart, Sparkles, Gift, ArrowRight, Flame, 
-  Edit3, Calendar, ChevronDown, ChevronUp, Plus, Clock 
+import {
+  Heart, Sparkles, Gift, ArrowRight, Flame,
+  Edit3, Calendar, ChevronDown, ChevronUp, Plus, Clock, Music
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import { formatVietnameseFull, formatVietnameseShort } from '../utils/dateUtils';
+import AvatarStatusModal from './AvatarStatusModal';
 
 export default function LoveCounter({ onNavigateToGame }) {
-  const { coupleData, setIsSettingsOpen, getClosestEvent } = useCouple();
+  const { coupleData, setIsSettingsOpen, getClosestEvent, playTrackDirectly } = useCouple();
   const [showAllEvents, setShowAllEvents] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [statusTargetRole, setStatusTargetRole] = useState('boy');
+
+  const boyStatus = coupleData?.boy?.status || {};
+  const girlStatus = coupleData?.girl?.status || {};
 
   // Tính toán thời gian yêu nhau theo giây
   const [elapsed, setElapsed] = useState({
@@ -90,20 +96,61 @@ export default function LoveCounter({ onNavigateToGame }) {
 
   return (
     <div className="space-y-6 sm:space-y-10 py-2 sm:py-4 max-w-4xl mx-auto px-1 sm:px-0">
-      
+
       {/* Hero Section: Couple Avatars & Beating Heart */}
       <div className="relative text-center pt-2 sm:pt-4">
         {/* Decorative glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 sm:w-72 sm:h-72 bg-rose-200/50 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="flex items-center justify-center space-x-3 sm:space-x-6 md:space-x-10 mb-3 sm:mb-4">
+        <div className="flex items-end justify-center space-x-2 sm:space-x-6 md:space-x-10 mb-3 sm:mb-4">
+          
           {/* Chàng trai */}
-          <div className="flex flex-col items-center group">
-            <div className="relative p-1 sm:p-1.5 rounded-full bg-gradient-to-tr from-rose-400 to-rose-200 shadow-lg group-hover:scale-105 transition-all duration-300">
+          <div className="flex flex-col items-center group relative">
+            {/* Thought Bubble - Chàng trai */}
+            <div
+              onClick={() => {
+                setStatusTargetRole('boy');
+                setIsStatusModalOpen(true);
+              }}
+              className="cursor-pointer group/status relative mb-1.5 sm:mb-2 transition-all hover:scale-105 active:scale-95 animate-bounce-gentle z-20"
+              title="Chạm để đổi suy nghĩ / status hôm nay"
+            >
+              <div className="bg-white/95 hover:bg-rose-50/95 border border-rose-200/90 shadow-md shadow-rose-200/50 rounded-2xl px-2.5 sm:px-3.5 py-1 sm:py-1.5 flex items-center gap-1.5 max-w-[125px] sm:max-w-[170px] transition">
+                <span className="text-sm shrink-0">{boyStatus.emoji || '💭'}</span>
+                <div className="flex flex-col min-w-0 text-left">
+                  <span className="font-semibold text-[10px] sm:text-xs text-slate-700 truncate">
+                    {boyStatus.text || 'Nghĩ gì thế?'}
+                  </span>
+                  {boyStatus.songTitle && (
+                    <span 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (boyStatus.song) playTrackDirectly(boyStatus.song);
+                      }}
+                      className="text-[9px] text-rose-500 font-bold flex items-center gap-0.5 truncate hover:underline"
+                      title={`Phát bài: ${boyStatus.songTitle}`}
+                    >
+                      <Music className="w-2.5 h-2.5 animate-spin-slow shrink-0" />
+                      <span className="truncate">{boyStatus.songTitle}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+              {/* Bubble pointer tail */}
+              <div className="w-2 h-2 bg-white border-r border-b border-rose-200 rotate-45 mx-auto -mt-1 shadow-xs" />
+            </div>
+
+            <div 
+              onClick={() => {
+                setStatusTargetRole('boy');
+                setIsStatusModalOpen(true);
+              }}
+              className="relative p-1 sm:p-1.5 rounded-full bg-gradient-to-tr from-rose-400 to-rose-200 shadow-lg group-hover:scale-105 transition-all duration-300 cursor-pointer"
+            >
               <img
                 src={coupleData.boy.avatar}
                 alt={coupleData.boy.name}
-                className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-3 sm:border-4 border-white shadow-inner"
+                className="w-18 h-18 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-3 sm:border-4 border-white shadow-inner"
               />
               <span className="absolute bottom-0.5 right-0.5 bg-white p-0.5 sm:p-1 rounded-full shadow text-[10px] sm:text-xs">
                 👑
@@ -118,10 +165,10 @@ export default function LoveCounter({ onNavigateToGame }) {
           </div>
 
           {/* Trái tim kết nối */}
-          <div className="flex flex-col items-center -mt-4 sm:-mt-6 shrink-0">
+          <div className="flex flex-col items-center mb-6 sm:mb-8 shrink-0">
             <div className="relative">
-              <Heart className="w-8 h-8 sm:w-11 sm:h-11 md:w-14 md:h-14 text-rose-500 fill-rose-500 animate-pulse-gentle drop-shadow-md" />
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 absolute -top-1 -right-1 sm:-right-2 animate-bounce" />
+              <Heart className="w-7 h-7 sm:w-11 sm:h-11 md:w-14 md:h-14 text-rose-500 fill-rose-500 animate-pulse-gentle drop-shadow-md" />
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-amber-400 absolute -top-1 -right-1 sm:-right-2 animate-bounce" />
             </div>
             <span className="mt-1 sm:mt-2 text-[9px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 bg-rose-100/90 text-rose-700 rounded-full shadow-xs">
               In Love
@@ -129,12 +176,52 @@ export default function LoveCounter({ onNavigateToGame }) {
           </div>
 
           {/* Cô gái */}
-          <div className="flex flex-col items-center group">
-            <div className="relative p-1 sm:p-1.5 rounded-full bg-gradient-to-tr from-pink-400 to-rose-200 shadow-lg group-hover:scale-105 transition-all duration-300">
+          <div className="flex flex-col items-center group relative">
+            {/* Thought Bubble - Cô gái */}
+            <div
+              onClick={() => {
+                setStatusTargetRole('girl');
+                setIsStatusModalOpen(true);
+              }}
+              className="cursor-pointer group/status relative mb-1.5 sm:mb-2 transition-all hover:scale-105 active:scale-95 animate-bounce-gentle z-20"
+              title="Chạm để đổi suy nghĩ / status hôm nay"
+            >
+              <div className="bg-white/95 hover:bg-pink-50/95 border border-pink-200/90 shadow-md shadow-pink-200/50 rounded-2xl px-2.5 sm:px-3.5 py-1 sm:py-1.5 flex items-center gap-1.5 max-w-[125px] sm:max-w-[170px] transition">
+                <span className="text-sm shrink-0">{girlStatus.emoji || '💭'}</span>
+                <div className="flex flex-col min-w-0 text-left">
+                  <span className="font-semibold text-[10px] sm:text-xs text-slate-700 truncate">
+                    {girlStatus.text || 'Nghĩ gì thế?'}
+                  </span>
+                  {girlStatus.songTitle && (
+                    <span 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (girlStatus.song) playTrackDirectly(girlStatus.song);
+                      }}
+                      className="text-[9px] text-pink-500 font-bold flex items-center gap-0.5 truncate hover:underline"
+                      title={`Phát bài: ${girlStatus.songTitle}`}
+                    >
+                      <Music className="w-2.5 h-2.5 animate-spin-slow shrink-0" />
+                      <span className="truncate">{girlStatus.songTitle}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+              {/* Bubble pointer tail */}
+              <div className="w-2 h-2 bg-white border-r border-b border-pink-200 rotate-45 mx-auto -mt-1 shadow-xs" />
+            </div>
+
+            <div 
+              onClick={() => {
+                setStatusTargetRole('girl');
+                setIsStatusModalOpen(true);
+              }}
+              className="relative p-1 sm:p-1.5 rounded-full bg-gradient-to-tr from-pink-400 to-rose-200 shadow-lg group-hover:scale-105 transition-all duration-300 cursor-pointer"
+            >
               <img
                 src={coupleData.girl.avatar}
                 alt={coupleData.girl.name}
-                className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-3 sm:border-4 border-white shadow-inner"
+                className="w-18 h-18 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-3 sm:border-4 border-white shadow-inner"
               />
               <span className="absolute bottom-0.5 right-0.5 bg-white p-0.5 sm:p-1 rounded-full shadow text-[10px] sm:text-xs">
                 🎀
@@ -156,7 +243,7 @@ export default function LoveCounter({ onNavigateToGame }) {
             className="inline-flex items-center space-x-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/90 hover:bg-rose-50 border border-rose-200 shadow-xs text-[11px] sm:text-xs font-medium text-rose-600 hover:text-rose-700 transition active:scale-95"
           >
             <Edit3 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            <span>Tùy chỉnh ngày yêu, avatar & sự kiện</span>
+            <span>Tùy chỉnh</span>
           </button>
         </div>
 
@@ -247,7 +334,7 @@ export default function LoveCounter({ onNavigateToGame }) {
       {/* HIGHLIGHT: SỰ KIỆN GẦN NHẤT */}
       <div className="glass-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-7 border border-rose-200/90 bg-gradient-to-r from-rose-50/90 via-pink-50/80 to-rose-50/90 shadow-md relative">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-5 text-center sm:text-left">
-          
+
           <div className="flex items-center space-x-3 w-full sm:w-auto">
             <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center text-xl sm:text-2xl shadow-md shadow-rose-200 shrink-0">
               {closestEvent.icon || "🎁"}
@@ -318,19 +405,17 @@ export default function LoveCounter({ onNavigateToGame }) {
               return (
                 <div
                   key={item.id}
-                  className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border transition-all ${
-                    isItemClosest
+                  className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border transition-all ${isItemClosest
                       ? 'bg-rose-100/90 border-rose-300 ring-2 ring-rose-200 shadow-xs'
                       : isPast
-                      ? 'bg-slate-50/70 border-slate-200 opacity-60'
-                      : 'bg-white/85 border-rose-100 shadow-xs'
-                  }`}
+                        ? 'bg-slate-50/70 border-slate-200 opacity-60'
+                        : 'bg-white/85 border-rose-100 shadow-xs'
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-lg">{item.icon || '💖'}</span>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
-                      isItemClosest ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600'
-                    }`}>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${isItemClosest ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}>
                       {isItemClosest ? 'Gần nhất' : formatVietnameseShort(item.date)}
                     </span>
                   </div>
@@ -361,6 +446,13 @@ export default function LoveCounter({ onNavigateToGame }) {
           Vượt qua 4 trạm thử thách để mở khóa bức tâm thư & điều bất ngờ 💌
         </p>
       </div>
+
+      {/* Modal Cập Nhật Status Avatar */}
+      <AvatarStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        targetRole={statusTargetRole}
+      />
     </div>
   );
 }

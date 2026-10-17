@@ -1,12 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Play, Pause, SkipForward, SkipBack, Music, 
-  Volume2, VolumeX, Disc, Sparkles, Upload, ListMusic, Plus, Trash2 
+  Volume2, VolumeX, Disc, Sparkles, Upload, ListMusic, Plus, Trash2, Library 
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
+import MusicPickerModal from './MusicPickerModal';
 
 export default function MusicPlayer({ autoTriggerPlay = false }) {
-  const { activePlaylist, uploadCustomSong, removeCustomSong } = useCouple();
+  const { 
+    activePlaylist, setActivePlaylist, 
+    uploadCustomSong, removeCustomSong, 
+    directPlayTrack 
+  } = useCouple();
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -14,6 +19,7 @@ export default function MusicPlayer({ autoTriggerPlay = false }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showPlaylistView, setShowPlaylistView] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isMusicPickerOpen, setIsMusicPickerOpen] = useState(false);
 
   const audioRef = useRef(null);
   const musicFileInputRef = useRef(null);
@@ -24,6 +30,28 @@ export default function MusicPlayer({ autoTriggerPlay = false }) {
     url: "",
     cover: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?q=80&w=400&auto=format&fit=crop",
   };
+
+  // Lắng nghe phát nhạc trực tiếp (khi chọn từ Status Avatar hoặc bài hát cụ thể)
+  useEffect(() => {
+    if (!directPlayTrack || !directPlayTrack.url) return;
+
+    const existingIndex = activePlaylist.findIndex((s) => s.url === directPlayTrack.url);
+    if (existingIndex >= 0) {
+      setCurrentTrackIndex(existingIndex);
+    } else {
+      const newPlaylist = [...activePlaylist, directPlayTrack];
+      setActivePlaylist(newPlaylist);
+      setCurrentTrackIndex(newPlaylist.length - 1);
+    }
+
+    setIsPlaying(true);
+    setIsExpanded(true);
+
+    if (audioRef.current) {
+      audioRef.current.src = directPlayTrack.url;
+      audioRef.current.play().catch(() => {});
+    }
+  }, [directPlayTrack]);
 
   // Khởi tạo và thay đổi bài hát
   useEffect(() => {
@@ -47,6 +75,23 @@ export default function MusicPlayer({ autoTriggerPlay = false }) {
       }
     }
   }, [currentTrackIndex, currentTrack.url]);
+
+  const handleSelectFromFBLibrary = (song) => {
+    const existingIndex = activePlaylist.findIndex((s) => s.url === song.url);
+    if (existingIndex >= 0) {
+      setCurrentTrackIndex(existingIndex);
+    } else {
+      const newPlaylist = [...activePlaylist, song];
+      setActivePlaylist(newPlaylist);
+      setCurrentTrackIndex(newPlaylist.length - 1);
+    }
+
+    setIsPlaying(true);
+    if (audioRef.current) {
+      audioRef.current.src = song.url;
+      audioRef.current.play().catch(() => {});
+    }
+  };
 
   // Nhận trigger phát nhạc khi thắng game
   useEffect(() => {
@@ -289,15 +334,24 @@ export default function MusicPlayer({ autoTriggerPlay = false }) {
                 })}
               </div>
 
-              {/* Upload Button */}
-              <div className="pt-2 border-t border-rose-100">
+              {/* Action Buttons: FB Music Library & Custom Upload */}
+              <div className="pt-2 border-t border-rose-100 space-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsMusicPickerOpen(true)}
+                  className="w-full py-2 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm hover:scale-102 active:scale-98 transition"
+                >
+                  <Music className="w-3.5 h-3.5 animate-bounce" />
+                  <span>Chọn Nhạc Phong Cách FB 🎶</span>
+                </button>
+
                 <button
                   onClick={() => musicFileInputRef.current?.click()}
                   disabled={isUploading}
-                  className="w-full py-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm hover:scale-102 transition"
+                  className="w-full py-1.5 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 shadow-2xs hover:scale-102 transition"
                 >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>{isUploading ? 'Đang nạp file nhạc...' : '+ Tải Lên Bài Hát Mới (.mp3)'}</span>
+                  <Upload className="w-3 h-3" />
+                  <span>{isUploading ? 'Đang nạp file...' : 'Tự tải lên từ máy (.mp3)'}</span>
                 </button>
               </div>
             </div>
@@ -327,6 +381,14 @@ export default function MusicPlayer({ autoTriggerPlay = false }) {
           <Music className="w-4 h-4 text-rose-500 ml-1 group-hover:scale-110 transition" />
         </button>
       )}
+
+      {/* Modal Chọn Nhạc FB */}
+      <MusicPickerModal
+        isOpen={isMusicPickerOpen}
+        onClose={() => setIsMusicPickerOpen(false)}
+        onSelectSong={handleSelectFromFBLibrary}
+        currentSongId={currentTrack?.id}
+      />
     </div>
   );
 }

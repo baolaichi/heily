@@ -33,8 +33,14 @@ export function CoupleProvider({ children }) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [customSongs, setCustomSongs] = useState([]);
   const [activePlaylist, setActivePlaylist] = useState(defaultConfig.playlist);
+  const [directPlayTrack, setDirectPlayTrack] = useState(null);
   const [cloudStatus, setCloudStatus] = useState('idle'); // 'idle' | 'syncing' | 'synced' | 'error'
   const [firebaseUrl, setFirebaseUrlState] = useState(() => getFirebaseUrl());
+
+  const playTrackDirectly = (track) => {
+    if (!track) return;
+    setDirectPlayTrack({ ...track, timestamp: Date.now() });
+  };
 
   // Tải danh sách bài hát tự upload từ IndexedDB khi mở trang
   useEffect(() => {
@@ -263,9 +269,12 @@ export function CoupleProvider({ children }) {
         isSettingsOpen,
         setIsSettingsOpen,
         activePlaylist,
+        setActivePlaylist,
         customSongs,
         uploadCustomSong,
         removeCustomSong,
+        directPlayTrack,
+        playTrackDirectly,
         // Cloud Sync capabilities
         cloudStatus,
         firebaseUrl,
