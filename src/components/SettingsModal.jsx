@@ -2,14 +2,14 @@ import React, { useState, useRef } from 'react';
 import { 
   X, Camera, Heart, Calendar, Sparkles, Check, 
   RotateCcw, Trash2, Plus, Save, Clock, Music, Upload, Disc,
-  Cloud, Copy, CheckCheck, RefreshCw, Smartphone, Laptop, Link2, ExternalLink, Bell, BellRing 
+  Cloud, Copy, CheckCheck, RefreshCw, Smartphone, Laptop, Link2, ExternalLink, Bell, BellRing, Lock
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import VietnameseDatePicker from './VietnameseDatePicker';
 import { formatVietnameseFull } from '../utils/dateUtils';
 import { getNotificationPermission, requestNotificationPermission, sendLocalNotification, playNotificationChime } from '../utils/notificationService';
 
-export default function SettingsModal() {
+export default function SettingsModal({ onLockPage }) {
   const { 
     coupleData, saveCoupleData, addEvent, deleteEvent, 
     resetToDefault, isSettingsOpen, setIsSettingsOpen,
@@ -948,6 +948,26 @@ export default function SettingsModal() {
               <p>• <strong>Android</strong>: Bấm nút <strong>"Bật Thông Báo"</strong> ở trên và chọn <strong>Cho phép (Allow)</strong>.</p>
             </div>
 
+          </div>
+        )}
+
+        {/* NÚT KHÓA TRANG - LUÔN HIỂN THỊ Ở CUỐI MODAL */}
+        {onLockPage && (
+          <div className="mt-6 pt-4 border-t border-rose-100">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSettingsOpen(false);
+                onLockPage();
+              }}
+              className="w-full flex items-center justify-center gap-2.5 py-3 px-5 rounded-2xl bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-slate-500 hover:text-rose-600 text-xs font-semibold transition-all duration-200 active:scale-95 group"
+            >
+              <Lock className="w-4 h-4 group-hover:animate-pulse" />
+              <span>Khóa Trang Web — Đăng Xuất An Toàn 🔒</span>
+            </button>
+            <p className="text-center text-[10px] text-slate-400 mt-1.5">
+              Khóa lại để bảo vệ khoảnh khắc riêng tư của hai bạn đều được an toàn ✨
+            </p>
           </div>
         )}
 

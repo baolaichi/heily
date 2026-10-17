@@ -57,7 +57,7 @@ function MainApp() {
       <FloatingHearts />
 
       {/* Top Navbar */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} onLockPage={handleLockPage} />
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-2.5 sm:px-4 pt-2 sm:pt-4 pb-24 sm:pb-16 relative z-20">
@@ -108,7 +108,7 @@ function MainApp() {
       <Footer onTriggerLove={handleLoveClick} onLockPage={handleLockPage} />
 
       {/* Settings Modal (Tùy chỉnh ngày yêu, upload avatar, biệt danh) */}
-      <SettingsModal />
+      <SettingsModal onLockPage={handleLockPage} />
 
       {/* Real-time Couple Secret Chat (Hộp Chat Đôi Ta) */}
       <CoupleChat />

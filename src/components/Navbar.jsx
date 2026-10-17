@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Heart, Gamepad2, CalendarHeart, Mail, Settings, Lock, 
+  Heart, Gamepad2, CalendarHeart, Mail, Settings,
   Bell, BellRing, ListTodo, Sprout, HeartPulse, ShieldCheck, 
   KeyRound, Eye, EyeOff, X 
 } from 'lucide-react';
@@ -8,7 +8,7 @@ import confetti from 'canvas-confetti';
 import { useCouple } from '../context/CoupleContext';
 import { getNotificationPermission, requestNotificationPermission, sendLocalNotification, playNotificationChime } from '../utils/notificationService';
 
-export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
+export default function Navbar({ activeTab, setActiveTab }) {
   const { coupleData, setIsSettingsOpen, myRole, setMyRole, switchRoleWithPin } = useCouple();
   const [notifyPermission, setNotifyPermission] = useState(() => getNotificationPermission());
 
@@ -163,7 +163,7 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
             </button>
           </div>
 
-          {/* Mobile/Tablet Right Action Buttons (Notification, Settings & Lock) */}
+          {/* Mobile/Tablet Right Action Buttons (Notification & Settings) */}
           <div className="flex items-center space-x-1 lg:hidden shrink-0">
             <button
               onClick={handleToggleNotification}
@@ -186,15 +186,6 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
             >
               <Settings className="w-4 h-4" />
             </button>
-            {onLockPage && (
-              <button
-                onClick={onLockPage}
-                className="p-1.5 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:scale-95 transition"
-                title="Khóa trang web"
-              >
-                <Lock className="w-4 h-4" />
-              </button>
-            )}
           </div>
         </div>
 
@@ -249,16 +240,6 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
             >
               <Settings className="w-4 h-4" />
             </button>
-
-            {onLockPage && (
-              <button
-                onClick={onLockPage}
-                className="p-2 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-200 shrink-0"
-                title="Khóa trang web"
-              >
-                <Lock className="w-4 h-4" />
-              </button>
-            )}
           </div>
         </div>
 
