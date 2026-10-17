@@ -6,6 +6,7 @@ import {
 import { useCouple } from '../context/CoupleContext';
 import { formatVietnameseFull, formatVietnameseShort } from '../utils/dateUtils';
 import AvatarStatusModal from './AvatarStatusModal';
+import LivePhotoWidget from './LivePhotoWidget';
 
 export default function LoveCounter({ onNavigateToGame }) {
   const { coupleData, setIsSettingsOpen, getClosestEvent, playTrackDirectly } = useCouple();
@@ -356,6 +357,9 @@ export default function LoveCounter({ onNavigateToGame }) {
           </div>
         </div>
       </div>
+
+      {/* 📸 LIVE PHOTO WIDGET (PHONG CÁCH LOCKET - GỬI ẢNH TỨC THÌ) */}
+      <LivePhotoWidget />
 
       {/* HIGHLIGHT: SỰ KIỆN GẦN NHẤT */}
       <div className="glass-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-7 border border-rose-200/90 bg-gradient-to-r from-rose-50/90 via-pink-50/80 to-rose-50/90 shadow-md relative">

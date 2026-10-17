@@ -12,64 +12,7 @@ import { formatVietnameseDateOnly } from '../utils/dateUtils';
 export default function CoupleBucketList() {
   const { coupleData } = useCouple();
 
-  const defaultBucketList = [
-    {
-      id: 'b1',
-      title: 'Cùng nhau ngắm hoàng hôn trên bãi biển 🌅',
-      category: 'Du Lịch',
-      icon: '🏖️',
-      completed: false,
-    },
-    {
-      id: 'b2',
-      title: 'Cùng nhau đi du lịch nước ngoài chuyến đầu tiên ✈️',
-      category: 'Du Lịch',
-      icon: '✈️',
-      completed: false,
-    },
-    {
-      id: 'b3',
-      title: 'Cùng nhau nấu một bữa tối dưới ánh nến lãng mạn 🕯️',
-      category: 'Ẩm Thực',
-      icon: '🍽️',
-      completed: false,
-    },
-    {
-      id: 'b4',
-      title: 'Cùng nhau đi xem concert của ca sĩ hai đứa mê mẩn 🎤',
-      category: 'Trải Nghiệm',
-      icon: '🎵',
-      completed: false,
-    },
-    {
-      id: 'b5',
-      title: 'Nuôi chung một em mèo đáng yêu 🐱',
-      category: 'Tương Lai',
-      icon: '🏡',
-      completed: false,
-    },
-    {
-      id: 'b6',
-      title: 'Chụp một bộ ảnh đôi phong cách vintage ngọt ngào 📸',
-      category: 'Lãng Mạn',
-      icon: '💕',
-      completed: false,
-    },
-    {
-      id: 'b7',
-      title: 'Cùng nhau đón giao thừa và ngắm pháo hoa rực rỡ 🎆',
-      category: 'Trải Nghiệm',
-      icon: '🎆',
-      completed: false,
-    },
-    {
-      id: 'b8',
-      title: 'Cùng nhau trang trí và dọn về tổ ấm chung 🔑',
-      category: 'Tương Lai',
-      icon: '🏠',
-      completed: false,
-    },
-  ];
+  const defaultBucketList = [];
 
   const [items, setItems] = useState(() => {
     try {
@@ -220,17 +163,10 @@ export default function CoupleBucketList() {
     if (base64) setCompleteImage(base64);
   };
 
-  // Đặt lại toàn bộ danh sách ước mơ về 0% (bắt đầu lại từ đầu)
+  // Đặt lại toàn bộ danh sách ước mơ (xóa sạch để hai bạn tự tạo mới)
   const handleResetAllBucketList = async () => {
-    if (window.confirm("Bạn có muốn đặt lại toàn bộ danh sách ước mơ về 0% (chưa hoàn thành) để hai bạn cùng nhau bắt đầu thực hiện lại từ đầu không?")) {
-      const resetItems = items.map((i) => ({
-        ...i,
-        completed: false,
-        completedDate: null,
-        note: '',
-        image: '',
-      }));
-      await saveItems(resetItems);
+    if (window.confirm("Bạn có muốn xóa sạch danh sách ước mơ để hai bạn tự tạo mới từ đầu không?")) {
+      await saveItems([]);
     }
   };
 
@@ -296,9 +232,11 @@ export default function CoupleBucketList() {
         </div>
 
         <p className="text-[11px] text-slate-500 italic">
-          {progressPercent === 100 
-            ? '🎉 Thật tuyệt vời! Hai bạn đã hoàn thành tất cả ước mơ cùng nhau!'
-            : `Đã hoàn thành ${completedCount} điều ước! Hãy tiếp tục cùng nhau đi hết chặng đường nhé 💕`}
+          {items.length === 0
+            ? '✨ Hãy cùng nhau thêm những ước mơ đầu tiên của hai đứa vào danh sách nhé!'
+            : progressPercent === 100 
+              ? '🎉 Thật tuyệt vời! Hai bạn đã hoàn thành tất cả ước mơ cùng nhau!'
+              : `Đã hoàn thành ${completedCount} điều ước! Hãy tiếp tục cùng nhau đi hết chặng đường nhé 💕`}
         </p>
       </div>
 
@@ -336,9 +274,30 @@ export default function CoupleBucketList() {
       {/* Bucket List Items */}
       <div className="space-y-2.5 text-left">
         {filteredItems.length === 0 ? (
-          <div className="glass-card p-8 rounded-2xl text-center text-slate-400 border border-rose-100">
-            <Heart className="w-10 h-10 mx-auto text-rose-300 mb-2 animate-bounce-gentle" />
-            <p className="text-xs sm:text-sm font-medium">Chưa có điều ước nào trong mục này</p>
+          <div className="p-8 sm:p-12 text-center bg-white/70 rounded-3xl border-2 border-dashed border-rose-200 text-slate-500 space-y-3">
+            <div className="w-14 h-14 mx-auto rounded-full bg-rose-50 flex items-center justify-center text-2xl shadow-inner">
+              📝
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-serif font-bold text-base sm:text-lg text-slate-800">
+                {items.length === 0 ? 'Chưa có ước mơ nào được tạo' : 'Không tìm thấy điều ước phù hợp'}
+              </h4>
+              <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
+                {items.length === 0 
+                  ? 'Danh sách đang hoàn toàn trống để hai bạn tự do ghi lại những điều muốn làm cùng nhau!' 
+                  : 'Hãy chọn danh mục khác hoặc bấm Thêm để tạo điều ước mới.'}
+              </p>
+            </div>
+            {items.length === 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white text-xs sm:text-sm font-bold shadow-md shadow-rose-200 transition active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Thêm ước mơ đầu tiên của đôi ta</span>
+              </button>
+            )}
           </div>
         ) : (
           filteredItems.map((item) => (
