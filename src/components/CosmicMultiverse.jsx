@@ -713,8 +713,8 @@ export default function CosmicMultiverse({ onBackToHome }) {
     <div
       ref={containerRef}
       className={`relative w-full overflow-hidden select-none transition-all duration-300 rounded-2xl sm:rounded-3xl ${isActualFullscreen
-          ? 'fixed inset-0 z-50 bg-[#090207] min-h-[100dvh] w-screen h-[100dvh]'
-          : 'h-[calc(100vh-140px)] sm:h-[480px] max-h-[520px] min-h-[350px] bg-gradient-to-b from-[#200517] via-[#12020e] to-[#080106] border border-pink-500/35 shadow-2xl my-1'
+        ? 'fixed inset-0 z-50 bg-[#090207] min-h-[100dvh] w-screen h-[100dvh]'
+        : 'h-[calc(100vh-140px)] sm:h-[480px] max-h-[520px] min-h-[350px] bg-gradient-to-b from-[#200517] via-[#12020e] to-[#080106] border border-pink-500/35 shadow-2xl my-1'
         }`}
       style={{
         background: 'radial-gradient(circle at center, #2e0921 0%, #150310 50%, #080106 100%)'
@@ -732,7 +732,7 @@ export default function CosmicMultiverse({ onBackToHome }) {
               Không Gian Bí Mật 💌
             </h3>
             <p className="text-[10px] sm:text-xs text-pink-300/80 mb-4">
-              Vui lòng nhập mã khóa để mở không gian yêu thương của chúng ta nhé!
+              Vui lòng nhập mã khóa để mở không gian của chúng ta nhé!
             </p>
 
             <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3">
@@ -741,7 +741,7 @@ export default function CosmicMultiverse({ onBackToHome }) {
                   type="password"
                   value={passInput}
                   onChange={(e) => setPassInput(e.target.value)}
-                  placeholder="Nhập mã khóa (ví dụ: ******)"
+                  placeholder="Nhập mã 6 số"
                   maxLength={6}
                   autoFocus
                   className="w-full bg-pink-950/60 border border-pink-400/40 rounded-xl px-3 py-2 text-center tracking-widest text-pink-100 text-sm placeholder-pink-400/40 focus:outline-none focus:border-pink-300 transition"
@@ -843,7 +843,7 @@ export default function CosmicMultiverse({ onBackToHome }) {
                   Mừng Ngày Phụ Nữ Việt Nam 20/10
                 </span>
                 <h3 className="text-sm sm:text-xl font-serif-title italic gold-glow text-pink-100 mt-0.5">
-                  Gửi {letterToName} Yêu Thương
+                  Gửi {letterToName}
                 </h3>
                 <p className="text-[8px] sm:text-[10px] text-pink-200/80">
                   Chúc em ngày 20/10 thật nhiều niềm vui, luôn rạng rỡ và luôn bình yên nhé! 💕
@@ -871,7 +871,7 @@ export default function CosmicMultiverse({ onBackToHome }) {
                         </span>
                       </div>
                       <p className="font-handwriting text-xs sm:text-base text-pink-950 font-bold leading-snug">
-                        "Chúc mừng 20/10 Thúy Hương của anh! Cảm ơn em vì đã luôn đồng hành, mang lại nụ cười và sự bình yên mỗi ngày. Mong mọi điều tuyệt vời nhất luôn đến với em..."
+                        "Chúc bé iu 20/10 vui vẻ nhé ❤️ Mong em luôn vui vẻ, bình an, làm gì cũng thuận lợi và lúc nào cũng có thật nhiều niềm vui. yêu em rấc rấc nhìu🥰"
                       </p>
                     </div>
                     <div className="text-right text-[8px] sm:text-[10px] text-pink-700 italic font-medium flex items-center justify-end gap-1">
@@ -1040,7 +1040,7 @@ export default function CosmicMultiverse({ onBackToHome }) {
                       </p>
                     </div>
                     <p className="text-[10px] text-pink-300 italic px-2">
-                      Khoảnh khắc tuyệt vời trong hành trình của hai đứa 💕
+                      xinh đẹp nhất vũ trụ 💕
                     </p>
                   </div>
                 ) : (
