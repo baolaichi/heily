@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   Sprout, Droplets, Heart, Sparkles, Send, Lock, 
-  Unlock, Check, Calendar, Sun, Flower2, Award 
+  Unlock, Check, Calendar, Sun, Flower2, Award, RotateCcw 
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import { syncPushGameState, syncPullGameState, subscribeToGame } from '../utils/cloudSync';
@@ -19,10 +19,10 @@ export default function LovePlant() {
     }
   });
 
-  // State cây tình yêu
+  // State cây tình yêu khởi đầu từ Hạt Mầm (Cấp 1 - 0 EXP)
   const [plantData, setPlantData] = useState({
-    exp: 45,
-    level: 2,
+    exp: 0,
+    level: 1,
     wateredDates: {}, // { '2026-10-17': { boy: true, girl: true } }
     answers: {}, // { questionId: { boy: '...', girl: '...' } }
   });
@@ -173,6 +173,23 @@ export default function LovePlant() {
     setTimeout(() => setIsWatering(false), 1200);
   };
 
+  // Đặt lại mầm cây về ban đầu (Level 1, 0 EXP)
+  const handleResetPlant = async () => {
+    if (window.confirm("Bạn có muốn đặt lại cây tình yêu về ban đầu (Hạt Mầm Cấp 1, 0 EXP) để hai bạn cùng nhau chăm sóc lại từ đầu không?")) {
+      const resetState = {
+        exp: 0,
+        level: 1,
+        wateredDates: {},
+        answers: {},
+      };
+      setPlantData(resetState);
+      try {
+        localStorage.removeItem('love_plant_data');
+      } catch {}
+      await syncPushGameState('love_plant', resetState);
+    }
+  };
+
   const handleRoleChange = (role) => {
     setMyRole(role);
     try {
@@ -271,13 +288,13 @@ export default function LovePlant() {
           </div>
         </div>
 
-        {/* Nút Tưới Nước Hàng Ngày */}
-        <div className="mt-5">
+        {/* Nút Tưới Nước Hàng Ngày & Đặt Lại Ban Đầu */}
+        <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             type="button"
             onClick={handleWaterPlant}
             disabled={isTodayWatered}
-            className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-2 mx-auto active:scale-95 ${
+            className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-md transition-all flex items-center gap-2 active:scale-95 ${
               isTodayWatered
                 ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
                 : 'bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white shadow-sky-200 scale-102 hover:scale-105'
@@ -285,6 +302,16 @@ export default function LovePlant() {
           >
             <Droplets className="w-4 h-4 fill-current" />
             <span>{isTodayWatered ? 'Hôm nay bạn đã tưới nước rồi 💧' : 'Tưới Nước Tình Yêu (+15 EXP) 💧'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResetPlant}
+            className="px-3.5 py-2 rounded-full text-[11px] font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50/80 transition flex items-center gap-1.5"
+            title="Đặt lại mầm cây về Cấp 1 để bắt đầu chăm sóc từ đầu"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Trồng lại từ đầu 🌱</span>
           </button>
         </div>
 

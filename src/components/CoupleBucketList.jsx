@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   CheckCircle2, Circle, Plus, Heart, Sparkles, 
-  Trash2, Camera, Calendar, Trophy, Filter, Image, X, Award 
+  Trash2, Camera, Calendar, Trophy, Filter, Image, X, Award, RotateCcw 
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import { syncPushGameState, syncPullGameState, subscribeToGame, compressImageToBase64 } from '../utils/cloudSync';
@@ -18,10 +18,7 @@ export default function CoupleBucketList() {
       title: 'Cùng nhau ngắm hoàng hôn trên bãi biển 🌅',
       category: 'Du Lịch',
       icon: '🏖️',
-      completed: true,
-      completedDate: '2026-06-15',
-      note: 'Buổi chiều hoàng hôn lãng mạn nhất của hai đứa mình!',
-      image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop',
+      completed: false,
     },
     {
       id: 'b2',
@@ -223,6 +220,20 @@ export default function CoupleBucketList() {
     if (base64) setCompleteImage(base64);
   };
 
+  // Đặt lại toàn bộ danh sách ước mơ về 0% (bắt đầu lại từ đầu)
+  const handleResetAllBucketList = async () => {
+    if (window.confirm("Bạn có muốn đặt lại toàn bộ danh sách ước mơ về 0% (chưa hoàn thành) để hai bạn cùng nhau bắt đầu thực hiện lại từ đầu không?")) {
+      const resetItems = items.map((i) => ({
+        ...i,
+        completed: false,
+        completedDate: null,
+        note: '',
+        image: '',
+      }));
+      await saveItems(resetItems);
+    }
+  };
+
   // Lọc danh sách
   const filteredItems = items.filter((item) => {
     if (activeFilter === 'all') return true;
@@ -260,9 +271,20 @@ export default function CoupleBucketList() {
               Tiến Độ Ước Mơ Tình Yêu
             </span>
           </div>
-          <span className="text-xs font-bold text-rose-600">
-            {completedCount}/{items.length} ({progressPercent}%)
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold text-rose-600">
+              {completedCount}/{items.length} ({progressPercent}%)
+            </span>
+            <button
+              type="button"
+              onClick={handleResetAllBucketList}
+              className="text-[11px] text-slate-400 hover:text-rose-500 flex items-center gap-1 transition px-2 py-0.5 rounded-full hover:bg-rose-50"
+              title="Đặt lại toàn bộ về 0% ban đầu"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Bắt đầu lại</span>
+            </button>
+          </div>
         </div>
 
         {/* Progress Bar */}
