@@ -3,14 +3,21 @@ import confetti from 'canvas-confetti';
 import { 
   Camera, Heart, Sparkles, Send, Image as ImageIcon, 
   Clock, X, History, RefreshCw, Upload, Maximize2, 
-  ChevronLeft, ChevronRight, MessageCircle, MessageSquareShare 
+  ChevronLeft, ChevronRight, MessageCircle, MessageSquareShare,
+  Bell, BellRing, BellOff
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import { 
   syncPushGameState, syncPullGameState, subscribeToGame, 
   compressImageToBase64, syncSendMessage 
 } from '../utils/cloudSync';
-import { playNotificationChime } from '../utils/notificationService';
+import { 
+  playNotificationChime, 
+  notifyNewLocketPhoto, 
+  notifyLocketReaction, 
+  getNotificationPermission, 
+  requestNotificationPermission 
+} from '../utils/notificationService';
 
 // Tính thời gian trước
 function timeAgo(dateString) {
@@ -66,8 +73,24 @@ export default function LivePhotoWidget() {
   // Modal phóng to ảnh hiện tại
   const [showZoomModal, setShowZoomModal] = useState(false);
 
+  // Trạng thái thông báo Web Push & Thông báo nổi (In-App Toast)
+  const [notificationStatus, setNotificationStatus] = useState(() => getNotificationPermission());
+  const [inAppToast, setInAppToast] = useState(null);
+
   const fileInputRef = useRef(null);
   const lastTimestampRef = useRef(locketData.current?.timestamp || '');
+  const lastReactionKeyRef = useRef(
+    locketData.current?.reactions?.[partnerRole] 
+      ? `${locketData.current?.id}_${locketData.current.reactions[partnerRole]}` 
+      : ''
+  );
+
+  // Tự tắt Toast sau 5 giây
+  useEffect(() => {
+    if (!inAppToast) return;
+    const timer = setTimeout(() => setInAppToast(null), 5000);
+    return () => clearTimeout(timer);
+  }, [inAppToast]);
 
   // Touch Swipe Gesture References
   const touchStartXRef = useRef(null);
@@ -113,6 +136,8 @@ export default function LivePhotoWidget() {
       if (remote && remote.current) {
         setLocketData(remote);
         lastTimestampRef.current = remote.current.timestamp;
+        const initPartnerEmoji = remote.current.reactions?.[partnerRole];
+        lastReactionKeyRef.current = initPartnerEmoji ? `${remote.current.id}_${initPartnerEmoji}` : '';
         try {
           localStorage.setItem('heily_locket_photo', JSON.stringify(remote));
         } catch (e) {}
@@ -123,25 +148,72 @@ export default function LivePhotoWidget() {
     const unsubscribe = subscribeToGame('locket_photo', (remote) => {
       if (!remote || !remote.current) return;
 
-      // Nếu có ảnh mới từ người kia: rung và phát âm thanh
+      // a. Nếu có ảnh mới từ người kia: thông báo Web Push + rung + phát âm thanh + Toast
       if (remote.current.timestamp && remote.current.timestamp !== lastTimestampRef.current) {
+        const isFirstLoad = !lastTimestampRef.current;
         lastTimestampRef.current = remote.current.timestamp;
         
         // Tự động chuyển về ảnh mới nhất vừa gửi
         setCurrentIndex(0);
 
-        // Chỉ rung/kêu nếu không phải chính mình gửi
-        if (remote.current.senderRole !== myRole) {
+        // Chỉ thông báo nếu không phải chính mình gửi và không phải lần tải đầu tiên
+        if (remote.current.senderRole !== myRole && !isFirstLoad) {
           playNotificationChime();
           if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
             navigator.vibrate([120, 80, 150]);
           }
           confetti({
-            particleCount: 35,
-            spread: 60,
+            particleCount: 40,
+            spread: 70,
             origin: { y: 0.6 },
-            colors: ['#f43f5e', '#ec4899', '#fb7185'],
+            colors: ['#f43f5e', '#ec4899', '#fb7185', '#ffd166'],
           });
+
+          // Gửi thông báo hệ thống Web Push (xuất hiện cả trên thanh thông báo điện thoại)
+          notifyNewLocketPhoto(
+            remote.current.senderName || partnerName, 
+            remote.current.caption, 
+            remote.current.image
+          );
+
+          // Hiển thị Banner Toast nổi ngay trong màn hình
+          setInAppToast({
+            title: `📸 ${remote.current.senderName || partnerName} vừa gửi ảnh Locket!`,
+            body: remote.current.caption ? `"${remote.current.caption}"` : 'Vừa gửi một khoảnh khắc tức thì đến bạn 💕',
+            image: remote.current.image,
+          });
+        }
+      }
+
+      // b. Kiểm tra nếu đối phương vừa thả hoặc đổi cảm xúc vào ảnh của mình
+      if (remote.current && remote.current.senderRole === myRole) {
+        const partnerEmoji = remote.current.reactions?.[partnerRole];
+        const newReactionKey = partnerEmoji ? `${remote.current.id}_${partnerEmoji}` : '';
+        
+        if (newReactionKey && newReactionKey !== lastReactionKeyRef.current) {
+          if (lastReactionKeyRef.current !== undefined && lastReactionKeyRef.current !== '') {
+            playNotificationChime();
+            confetti({
+              particleCount: 25,
+              spread: 50,
+              origin: { y: 0.7 },
+              colors: ['#f43f5e', '#ec4899', '#fb7185'],
+            });
+
+            // Gửi thông báo hệ thống Web Push
+            notifyLocketReaction(
+              partnerName, 
+              partnerEmoji, 
+              remote.current.caption
+            );
+
+            // Toast nổi
+            setInAppToast({
+              title: `${partnerEmoji} ${partnerName} đã thả cảm xúc!`,
+              body: remote.current.caption ? `Biểu cảm "${partnerEmoji}" cho ảnh: "${remote.current.caption}"` : `Đã thả biểu cảm ${partnerEmoji} lên ảnh của bạn 💕`,
+            });
+          }
+          lastReactionKeyRef.current = newReactionKey;
         }
       }
 
@@ -154,7 +226,25 @@ export default function LivePhotoWidget() {
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, [myRole]);
+  }, [myRole, partnerRole, partnerName]);
+
+  // Bật/Kiểm tra quyền thông báo cho Locket
+  const handleToggleNotification = async () => {
+    if (notificationStatus === 'granted') {
+      playNotificationChime();
+      notifyNewLocketPhoto('Locket Đôi Ta', 'Thông báo Locket đang hoạt động rất tốt! 🔔');
+      return;
+    }
+    const granted = await requestNotificationPermission();
+    const updatedStatus = getNotificationPermission();
+    setNotificationStatus(updatedStatus);
+    if (granted || updatedStatus === 'granted') {
+      playNotificationChime();
+      notifyNewLocketPhoto('Locket Đôi Ta', 'Đã bật thông báo thành công! Bạn sẽ nhận thông báo ngay khi có ảnh mới 💕');
+    } else if (updatedStatus === 'denied') {
+      alert('Trình duyệt đang chặn thông báo. Vui lòng bấm vào biểu tượng ổ khóa cạnh thanh địa chỉ web trên trình duyệt để Cho phép (Allow) thông báo nhé!');
+    }
+  };
 
   // XỬ LÝ VUỐT (SWIPE GESTURE) TRÁI / PHẢI
   const handleTouchStart = (e) => {
@@ -356,6 +446,40 @@ export default function LivePhotoWidget() {
   return (
     <div className="w-full max-w-xl mx-auto my-4 sm:my-6">
       
+      {/* In-App Toast Popup khi có ảnh / reaction mới */}
+      {inAppToast && (
+        <div 
+          onClick={() => {
+            setCurrentIndex(0);
+            setInAppToast(null);
+          }}
+          className="fixed top-18 sm:top-20 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border-2 border-rose-300 p-3 flex items-center gap-3 cursor-pointer animate-in fade-in slide-in-from-top duration-300 hover:shadow-rose-200/50"
+        >
+          {inAppToast.image ? (
+            <img src={inAppToast.image} alt="Locket" className="w-11 h-11 rounded-xl object-cover border border-rose-200 shadow-xs" />
+          ) : (
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center text-white text-lg shadow-xs">
+              📸
+            </div>
+          )}
+          <div className="flex-1 min-w-0 text-left">
+            <div className="font-bold text-xs sm:text-sm text-slate-800 truncate flex items-center gap-1.5">
+              <span>{inAppToast.title}</span>
+            </div>
+            <div className="text-[11px] text-slate-600 truncate">
+              {inAppToast.body}
+            </div>
+          </div>
+          <button 
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setInAppToast(null); }}
+            className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Khung Widget Phong Cách Locket */}
       <div className="glass-card rounded-3xl p-4 sm:p-5 border border-rose-200/90 shadow-xl bg-gradient-to-b from-rose-50/70 via-white to-pink-50/60 relative overflow-hidden text-left">
         
@@ -386,6 +510,30 @@ export default function LivePhotoWidget() {
               </span>
             )}
 
+            {/* Nút Chuông Thông Báo */}
+            <button
+              type="button"
+              onClick={handleToggleNotification}
+              title={notificationStatus === 'granted' ? 'Đã bật thông báo Locket' : 'Bật thông báo khi có ảnh mới'}
+              className={`text-[11px] font-medium flex items-center gap-1 transition px-2.5 py-1 rounded-full border ${
+                notificationStatus === 'granted'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                  : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 animate-pulse'
+              }`}
+            >
+              {notificationStatus === 'granted' ? (
+                <>
+                  <Bell className="w-3 h-3 text-emerald-600" />
+                  <span className="hidden xs:inline">Thông báo</span>
+                </>
+              ) : (
+                <>
+                  <BellRing className="w-3 h-3 text-amber-600" />
+                  <span className="hidden xs:inline">Bật chuông</span>
+                </>
+              )}
+            </button>
+
             {/* Nút Xem Lịch Sử */}
             {allPhotos.length > 0 && (
               <button
@@ -399,6 +547,20 @@ export default function LivePhotoWidget() {
             )}
           </div>
         </div>
+
+        {/* Banner Nhắc Bật Thông Báo Nếu Chưa Cấp Quyền */}
+        {notificationStatus !== 'granted' && (
+          <div 
+            onClick={handleToggleNotification}
+            className="mb-3 px-3 py-2 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] flex items-center justify-between gap-2 cursor-pointer hover:bg-amber-100 transition active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-2">
+              <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-ping" />
+              <span>Bật thông báo để nhận ảnh Locket & cảm xúc tức thì! 🔔</span>
+            </div>
+            <span className="font-bold underline text-amber-900 shrink-0">Bật ngay</span>
+          </div>
+        )}
 
         {/* KHUNG HIỂN THỊ ẢNH LOCKET (VUỐT TRÁI / PHẢI) */}
         <div 

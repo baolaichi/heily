@@ -78,7 +78,7 @@ export function playNotificationChime() {
 }
 
 // Gửi thông báo trực tiếp lên điện thoại / màn hình
-export async function sendLocalNotification({ title, body, icon = '/img/logo.png', tag = 'love_alert' }) {
+export async function sendLocalNotification({ title, body, icon = '/img/logo.png', tag = 'love_alert', image = null }) {
   if (!isNotificationSupported()) return;
   if (Notification.permission !== 'granted') return;
 
@@ -91,6 +91,7 @@ export async function sendLocalNotification({ title, body, icon = '/img/logo.png
     tag: tag,
     vibrate: [200, 100, 200],
     renotify: true,
+    ...(image ? { image } : {}),
   };
 
   try {
@@ -116,9 +117,17 @@ export async function sendLocalNotification({ title, body, icon = '/img/logo.png
 
 // 1. Thông báo tin nhắn mới
 export function notifyNewMessage(senderName, text) {
+  let title = `💬 Tin nhắn mới từ ${senderName}`;
+  let body = text || 'Gửi cho bạn một tin nhắn ngọt ngào 💕';
+
+  if (text && text.includes('[Trả lời ảnh Locket')) {
+    title = `📸 ${senderName} đã trả lời ảnh Locket!`;
+    body = text.replace(/📸\s*\[Trả lời ảnh Locket[^\]]*\]\s*/i, '').trim() || 'Vừa gửi câu trả lời về bức ảnh 💕';
+  }
+
   sendLocalNotification({
-    title: `💬 Tin nhắn mới từ ${senderName}`,
-    body: text || 'Gửi cho bạn một tin nhắn ngọt ngào 💕',
+    title,
+    body,
     tag: `msg_${Date.now()}`,
   });
 }
@@ -161,3 +170,23 @@ export function notifyUpcomingEvent(eventName, daysLeft) {
     tag: 'event_reminder',
   });
 }
+
+// 6. Thông báo ảnh Locket Live Photo mới
+export function notifyNewLocketPhoto(senderName, caption, imageUrl) {
+  sendLocalNotification({
+    title: `📸 ${senderName} vừa gửi ảnh Locket mới!`,
+    body: caption ? `"${caption}"` : 'Vừa gửi một khoảnh khắc tức thì đến màn hình của bạn 💕',
+    tag: `locket_${Date.now()}`,
+    image: imageUrl || undefined,
+  });
+}
+
+// 7. Thông báo cảm xúc trên ảnh Locket
+export function notifyLocketReaction(partnerName, emoji, caption) {
+  sendLocalNotification({
+    title: `${emoji} ${partnerName} đã thả cảm xúc vào ảnh Locket`,
+    body: caption ? `Biểu cảm "${emoji}" cho ảnh: "${caption}"` : `Đã thả biểu cảm ${emoji} lên ảnh của bạn 💕`,
+    tag: `locket_react_${Date.now()}`,
+  });
+}
+
