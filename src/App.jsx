@@ -6,6 +6,9 @@ import LoveCounter from './components/LoveCounter';
 import RomanticGame from './components/RomanticGame';
 import MemoryTimeline from './components/MemoryTimeline';
 import TimeCapsule from './components/TimeCapsule';
+import CoupleBucketList from './components/CoupleBucketList';
+import LovePlant from './components/LovePlant';
+import HeartbeatTouch from './components/HeartbeatTouch';
 import MusicPlayer from './components/MusicPlayer';
 import FloatingHearts from './components/FloatingHearts';
 import SettingsModal from './components/SettingsModal';
@@ -67,6 +70,24 @@ function MainApp() {
         {activeTab === 'game' && (
           <div className="animate-in fade-in duration-300">
             <RomanticGame onGameCompleted={handleGameCompleted} />
+          </div>
+        )}
+
+        {activeTab === 'bucketlist' && (
+          <div className="animate-in fade-in duration-300">
+            <CoupleBucketList />
+          </div>
+        )}
+
+        {activeTab === 'plant' && (
+          <div className="animate-in fade-in duration-300">
+            <LovePlant />
+          </div>
+        )}
+
+        {activeTab === 'heartbeat' && (
+          <div className="animate-in fade-in duration-300">
+            <HeartbeatTouch />
           </div>
         )}
 

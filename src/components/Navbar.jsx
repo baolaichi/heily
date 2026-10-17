@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Gamepad2, CalendarHeart, Mail, Settings, Lock, Bell, BellRing } from 'lucide-react';
+import { 
+  Heart, Gamepad2, CalendarHeart, Mail, Settings, Lock, 
+  Bell, BellRing, ListTodo, Sprout, HeartPulse 
+} from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import { getNotificationPermission, requestNotificationPermission, sendLocalNotification } from '../utils/notificationService';
 
@@ -25,6 +28,9 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
 
   const tabs = [
     { id: 'home', label: 'Trang Chủ', icon: Heart, shortLabel: 'Trang Chủ' },
+    { id: 'bucketlist', label: 'Ước Mơ', icon: ListTodo, shortLabel: 'Ước Mơ' },
+    { id: 'plant', label: 'Cây Yêu', icon: Sprout, shortLabel: 'Cây Yêu' },
+    { id: 'heartbeat', label: 'Chạm Tay', icon: HeartPulse, shortLabel: 'Chạm Tay' },
     { id: 'game', label: 'Trò Chơi', icon: Gamepad2, shortLabel: 'Trò Chơi' },
     { id: 'timeline', label: 'Kỷ Niệm', icon: CalendarHeart, shortLabel: 'Kỷ Niệm' },
     { id: 'capsule', label: 'Hộp Thư', icon: Mail, shortLabel: 'Hộp Thư' },
@@ -127,7 +133,7 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 sm:flex-initial relative flex items-center justify-center space-x-1 px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap min-h-[34px] ${
+                  className={`flex-1 sm:flex-initial shrink-0 relative flex items-center justify-center space-x-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap min-h-[34px] ${
                     isActive
                       ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md shadow-rose-200 scale-102'
                       : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50/70 active:bg-rose-100/60'
