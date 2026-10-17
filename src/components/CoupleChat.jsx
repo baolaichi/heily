@@ -8,6 +8,7 @@ import {
   syncSendMessage, syncPullMessages, syncDeleteMessage, 
   syncReactToMessage, subscribeToMessages, compressImageToBase64 
 } from '../utils/cloudSync';
+import { notifyNewMessage } from '../utils/notificationService';
 
 const CHAT_ROLE_KEY = 'bimatdoita_chat_sender_role';
 const LAST_READ_KEY = 'bimatdoita_chat_last_read';
@@ -69,16 +70,32 @@ export default function CoupleChat() {
   const currentName = userRole === 'boy' ? boyName : girlName;
   const currentAvatar = userRole === 'boy' ? boyAvatar : girlAvatar;
 
+  const lastKnownMsgTimeRef = useRef(Date.now());
+
   // Lắng nghe và kéo tin nhắn từ Firebase Realtime Database
   useEffect(() => {
     // 1. Kéo tin nhắn khi vừa mở web
     syncPullMessages().then((list) => {
       setMessages(list);
       updateUnread(list);
+      if (Array.isArray(list) && list.length > 0) {
+        lastKnownMsgTimeRef.current = list[list.length - 1].timestamp || Date.now();
+      }
     });
 
     // 2. Lắng nghe cập nhật thời gian thực bằng SSE
     const unsubscribe = subscribeToMessages((updatedList) => {
+      if (Array.isArray(updatedList) && updatedList.length > 0) {
+        const latest = updatedList[updatedList.length - 1];
+        if (latest && (latest.timestamp || 0) > lastKnownMsgTimeRef.current) {
+          lastKnownMsgTimeRef.current = latest.timestamp;
+          // Nếu tin nhắn từ đối phương và không phải do mình đang mở chat
+          if (latest.senderRole !== userRole) {
+            const partnerSenderName = latest.senderName || (userRole === 'boy' ? girlName : boyName);
+            notifyNewMessage(partnerSenderName, latest.text || 'Đã gửi một hình ảnh 📸');
+          }
+        }
+      }
       setMessages(updatedList);
       updateUnread(updatedList);
     });
@@ -86,7 +103,7 @@ export default function CoupleChat() {
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, [isOpen]);
+  }, [isOpen, userRole, boyName, girlName]);
 
   const updateUnread = (list) => {
     if (isOpen) {

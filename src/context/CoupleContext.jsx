@@ -7,6 +7,7 @@ import {
   generateSyncCode, parseSyncCode, 
   getFirebaseUrl, setFirebaseUrl 
 } from '../utils/cloudSync';
+import { notifyStatusUpdate, notifyUpcomingEvent } from '../utils/notificationService';
 
 const CoupleContext = createContext(null);
 
@@ -55,6 +56,27 @@ export function CoupleProvider({ children }) {
     const unsubscribe = subscribeToFirebase('coupleData', (remoteData) => {
       if (remoteData && remoteData.boy && remoteData.girl) {
         setCoupleData((prev) => {
+          // Kiểm tra xem đối phương có vừa cập nhật status mới không
+          try {
+            const currentMyRole = localStorage.getItem('user_chat_role') || 'boy';
+            const partnerRole = currentMyRole === 'boy' ? 'girl' : 'boy';
+            const newStatus = remoteData[partnerRole]?.status;
+            const oldStatus = prev[partnerRole]?.status;
+
+            if (
+              newStatus && 
+              newStatus.updatedAt && 
+              newStatus.updatedAt !== oldStatus?.updatedAt
+            ) {
+              const partnerName = partnerRole === 'boy' 
+                ? (remoteData.boy?.nickname || remoteData.boy?.name || 'Bug')
+                : (remoteData.girl?.nickname || remoteData.girl?.name || 'Heily');
+              notifyStatusUpdate(partnerName, newStatus.text, newStatus.songTitle);
+            }
+          } catch (e) {
+            console.warn('Lỗi kiểm tra thông báo status:', e);
+          }
+
           const merged = {
             ...prev,
             ...remoteData,
@@ -256,6 +278,33 @@ export function CoupleProvider({ children }) {
     const sorted = [...list].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return sorted[0];
   };
+
+  // Kiểm tra nhắc nhở ngày kỷ niệm sắp tới (chạy 1 lần/ngày)
+  useEffect(() => {
+    try {
+      const closest = getClosestEvent();
+      if (closest && closest.date) {
+        const now = new Date();
+        const target = new Date(closest.date);
+        const diffMs = target.setHours(0,0,0,0) - now.setHours(0,0,0,0);
+        const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        if (daysLeft >= 0 && daysLeft <= 3) {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const key = `event_notified_${closest.title || 'event'}_${todayStr}`;
+          const lastAlert = localStorage.getItem(key);
+          if (!lastAlert) {
+            localStorage.setItem(key, 'true');
+            setTimeout(() => {
+              notifyUpcomingEvent(closest.title, daysLeft);
+            }, 3500);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Lỗi kiểm tra sự kiện:', e);
+    }
+  }, [coupleData.events]);
 
   return (
     <CoupleContext.Provider

@@ -2,11 +2,12 @@ import React, { useState, useRef } from 'react';
 import { 
   X, Camera, Heart, Calendar, Sparkles, Check, 
   RotateCcw, Trash2, Plus, Save, Clock, Music, Upload, Disc,
-  Cloud, Copy, CheckCheck, RefreshCw, Smartphone, Laptop, Link2, ExternalLink
+  Cloud, Copy, CheckCheck, RefreshCw, Smartphone, Laptop, Link2, ExternalLink, Bell, BellRing 
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import VietnameseDatePicker from './VietnameseDatePicker';
 import { formatVietnameseFull } from '../utils/dateUtils';
+import { getNotificationPermission, requestNotificationPermission, sendLocalNotification, playNotificationChime } from '../utils/notificationService';
 
 export default function SettingsModal() {
   const { 
@@ -243,6 +244,17 @@ export default function SettingsModal() {
               {cloudStatus === 'synced' && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               )}
+            </button>
+            <button
+              onClick={() => setActiveSubTab('notify')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1.5 ${
+                activeSubTab === 'notify'
+                  ? 'bg-rose-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 hover:bg-rose-50 border border-rose-100'
+              }`}
+            >
+              <Bell className="w-3.5 h-3.5 text-amber-500" />
+              <span>Thông Báo 🔔</span>
             </button>
           </div>
         </div>
@@ -759,6 +771,147 @@ export default function SettingsModal() {
                   </button>
                 </div>
               </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 5: THÔNG BÁO ĐIỆN THOẠI (WEB PUSH) */}
+        {activeSubTab === 'notify' && (
+          <div className="space-y-6">
+            
+            {/* Header info */}
+            <div className="bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 p-4 sm:p-5 rounded-2xl border border-rose-200/90 shadow-xs space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md">
+                    <Bell className="w-5 h-5 animate-bounce" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm sm:text-base text-slate-800">
+                      Thông Báo Trực Tiếp Trên Điện Thoại
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Rung chuông "Ting Ting" ngay khi người ấy có hành động mới 💕
+                    </p>
+                  </div>
+                </div>
+
+                <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-2xs ${
+                  getNotificationPermission() === 'granted'
+                    ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+                    : 'bg-amber-100 text-amber-700 border border-amber-300'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    getNotificationPermission() === 'granted' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                  }`} />
+                  {getNotificationPermission() === 'granted' ? 'Đã Cấp Quyền' : 'Chưa Bật Quyền'}
+                </span>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-2 flex-wrap pt-1">
+                {getNotificationPermission() !== 'granted' ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const ok = await requestNotificationPermission();
+                      if (ok) {
+                        alert('Tuyệt vời! Đã bật thông báo thành công cho thiết bị của bạn 💕');
+                      } else {
+                        alert('Bạn cần chọn "Cho phép" (Allow) trong hộp thoại thông báo của trình duyệt nhé!');
+                      }
+                    }}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white text-xs font-bold shadow-md transition flex items-center gap-2 active:scale-95"
+                  >
+                    <BellRing className="w-4 h-4" />
+                    <span>Bật Thông Báo Trên Thiết Bị Này</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playNotificationChime();
+                      sendLocalNotification({
+                        title: '🔔 Thông Báo Mẫu Tình Yêu',
+                        body: 'Người yêu vừa gửi cho bạn một trái tim và ngàn nụ hôn 💕',
+                        tag: 'demo_test',
+                      });
+                    }}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold shadow-md transition flex items-center gap-2 active:scale-95"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Thử Nghiệm Rung Chuông & Bắn Thông Báo</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Danh sách 5 loại sự kiện tự động kích hoạt thông báo */}
+            <div className="bg-white/90 p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm space-y-3">
+              <h5 className="font-bold text-xs sm:text-sm text-slate-800 flex items-center gap-1.5 border-b border-rose-100 pb-2">
+                <span>⚡</span>
+                <span>Các trường hợp máy sẽ tự động báo "Ting Ting":</span>
+              </h5>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left text-xs">
+                <div className="p-3 rounded-xl bg-rose-50/60 border border-rose-200/70 flex items-start gap-2.5">
+                  <span className="text-xl">💬</span>
+                  <div>
+                    <h6 className="font-bold text-slate-800">Tin Nhắn Mới</h6>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Báo ngay khi người ấy gửi tin nhắn hoặc hình ảnh trong Hộp Chat Đôi Ta.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-pink-50/60 border border-pink-200/70 flex items-start gap-2.5">
+                  <span className="text-xl">💭</span>
+                  <div>
+                    <h6 className="font-bold text-slate-800">Đổi Status & Bài Hát</h6>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Báo ngay khi người ấy vừa cập nhật suy nghĩ hoặc gắn bài hát mới vào avatar.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-200/70 flex items-start gap-2.5">
+                  <span className="text-xl">💌</span>
+                  <div>
+                    <h6 className="font-bold text-slate-800">Hộp Thư Bí Mật Mới</h6>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Báo khi người ấy viết và cất một bức thư tình mới vào Hộp Thời Gian.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200/70 flex items-start gap-2.5">
+                  <span className="text-xl">📸</span>
+                  <div>
+                    <h6 className="font-bold text-slate-800">Kỷ Niệm Ảnh / Video</h6>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Báo khi có khoảnh khắc ảnh chụp hoặc video ngọt ngào mới được lưu giữ.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/70 flex items-start gap-2.5 sm:col-span-2">
+                  <span className="text-xl">🎉</span>
+                  <div>
+                    <h6 className="font-bold text-slate-800">Nhắc Nhở Ngày Kỷ Niệm</h6>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Tự động nhắc nhở trước 3 ngày và vào đúng ngày kỷ niệm tình yêu của hai bạn để cùng chuẩn bị!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mẹo cài đặt cho iPhone & Android */}
+            <div className="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200 text-left text-[11px] text-slate-600 space-y-1.5">
+              <span className="font-bold text-slate-700 block">📱 Mẹo nhận thông báo mượt mà nhất trên điện thoại:</span>
+              <p>• <strong>iPhone (iOS 16.4+)</strong>: Bấm nút <strong>Chia sẻ (Share)</strong> trên Safari ➔ Chọn <strong>"Thêm vào Màn hình chính" (Add to Home Screen)</strong> ➔ Mở icon trên màn hình chính và Bật thông báo.</p>
+              <p>• <strong>Android</strong>: Bấm nút <strong>"Bật Thông Báo"</strong> ở trên và chọn <strong>Cho phép (Allow)</strong>.</p>
             </div>
 
           </div>

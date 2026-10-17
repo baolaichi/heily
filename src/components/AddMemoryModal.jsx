@@ -4,6 +4,7 @@ import {
   Sparkles, Upload, Save, Check, Link 
 } from 'lucide-react';
 import { compressImageToBase64 } from '../utils/cloudSync';
+import { notifyNewMemory } from '../utils/notificationService';
 import VietnameseDatePicker from './VietnameseDatePicker';
 import { formatVietnameseFull } from '../utils/dateUtils';
 
@@ -74,6 +75,7 @@ export default function AddMemoryModal({ isOpen, onClose, onSaveMemory }) {
       };
 
       await onSaveMemory(newMemory);
+      notifyNewMemory(newMemory.title);
 
       // Reset form
       setTitle('');

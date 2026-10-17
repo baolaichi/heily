@@ -1,9 +1,27 @@
-import React from 'react';
-import { Heart, Gamepad2, CalendarHeart, Mail, Settings, Lock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Heart, Gamepad2, CalendarHeart, Mail, Settings, Lock, Bell, BellRing } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
+import { getNotificationPermission, requestNotificationPermission, sendLocalNotification } from '../utils/notificationService';
 
 export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
   const { coupleData, setIsSettingsOpen } = useCouple();
+  const [notifyPermission, setNotifyPermission] = useState(() => getNotificationPermission());
+
+  useEffect(() => {
+    setNotifyPermission(getNotificationPermission());
+  }, []);
+
+  const handleToggleNotification = async () => {
+    if (notifyPermission === 'granted') {
+      sendLocalNotification({
+        title: '🔔 Thông báo đang hoạt động!',
+        body: 'Bạn sẽ nhận được thông báo ngay khi có tin nhắn, status, kỷ niệm hay thư mới 💕',
+      });
+    } else {
+      const granted = await requestNotificationPermission();
+      if (granted) setNotifyPermission('granted');
+    }
+  };
 
   const tabs = [
     { id: 'home', label: 'Trang Chủ', icon: Heart, shortLabel: 'Trang Chủ' },
@@ -64,8 +82,22 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
             </div>
           </div>
 
-          {/* Mobile Right Action Buttons (Settings & Lock) */}
+          {/* Mobile Right Action Buttons (Notification, Settings & Lock) */}
           <div className="flex items-center space-x-1 sm:hidden">
+            <button
+              onClick={handleToggleNotification}
+              className="p-1.5 rounded-full text-rose-500 hover:bg-rose-100/70 active:scale-95 transition relative"
+              title={notifyPermission === 'granted' ? 'Thông báo điện thoại đang bật' : 'Bật thông báo điện thoại'}
+            >
+              {notifyPermission === 'granted' ? (
+                <>
+                  <Bell className="w-4 h-4 text-rose-600" />
+                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                </>
+              ) : (
+                <BellRing className="w-4 h-4 text-amber-500 animate-bounce" />
+              )}
+            </button>
             <button
               onClick={() => setIsSettingsOpen(true)}
               className="p-1.5 rounded-full text-rose-500 hover:bg-rose-100/70 active:scale-95 transition"
@@ -110,6 +142,28 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
 
           {/* Desktop Right Action Buttons */}
           <div className="hidden sm:flex items-center space-x-1 pl-1 border-l border-rose-100 ml-1">
+            <button
+              onClick={handleToggleNotification}
+              className={`px-2.5 py-1 rounded-full transition flex items-center gap-1 text-xs font-semibold ${
+                notifyPermission === 'granted'
+                  ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                  : 'text-rose-600 bg-rose-50 hover:bg-rose-100'
+              }`}
+              title={notifyPermission === 'granted' ? 'Thông báo điện thoại đang bật' : 'Bật thông báo điện thoại'}
+            >
+              {notifyPermission === 'granted' ? (
+                <>
+                  <Bell className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Thông Báo Bật</span>
+                </>
+              ) : (
+                <>
+                  <BellRing className="w-3.5 h-3.5 text-amber-500 animate-bounce" />
+                  <span>Bật Thông Báo</span>
+                </>
+              )}
+            </button>
+
             <button
               onClick={() => setIsSettingsOpen(true)}
               className="px-2.5 py-1 rounded-full text-rose-500 hover:text-rose-700 hover:bg-rose-100/70 transition flex items-center gap-1 text-xs font-semibold"

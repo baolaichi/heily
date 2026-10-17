@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { coupleConfig } from '../data/config';
 import { syncPushCapsules, syncPullCapsules, subscribeToFirebase } from '../utils/cloudSync';
+import { notifyNewCapsule } from '../utils/notificationService';
 import VietnameseDatePicker from './VietnameseDatePicker';
 import { formatVietnameseFull, formatVietnameseDateOnly } from '../utils/dateUtils';
 
@@ -36,11 +37,14 @@ export default function TimeCapsule() {
   // Form Chỉnh Sửa Thư
   const [editingCapsule, setEditingCapsule] = useState(null);
 
+  const initialCapsuleCountRef = React.useRef(0);
+
   // Kéo thư từ Firebase & lắng nghe thời gian thực tức thì
   useEffect(() => {
     syncPullCapsules().then((remoteList) => {
       if (Array.isArray(remoteList) && remoteList.length > 0) {
         setCapsules(remoteList);
+        initialCapsuleCountRef.current = remoteList.length;
         try {
           localStorage.setItem('heily_time_capsules', JSON.stringify(remoteList));
         } catch (e) {}
@@ -49,6 +53,11 @@ export default function TimeCapsule() {
 
     const unsubscribe = subscribeToFirebase('capsules', (remoteList) => {
       if (Array.isArray(remoteList)) {
+        if (initialCapsuleCountRef.current > 0 && remoteList.length > initialCapsuleCountRef.current) {
+          const newest = remoteList[remoteList.length - 1];
+          notifyNewCapsule('Người Yêu', newest?.title);
+        }
+        initialCapsuleCountRef.current = remoteList.length;
         setCapsules(remoteList);
         try {
           localStorage.setItem('heily_time_capsules', JSON.stringify(remoteList));
