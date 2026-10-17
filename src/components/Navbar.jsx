@@ -84,17 +84,17 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
 
   return (
     <header className="sticky top-0 z-30 w-full px-2 sm:px-4 pt-safe pb-1.5 transition-all">
-      <div className="max-w-5xl mx-auto glass-card rounded-2xl md:rounded-full px-2.5 sm:px-4 py-2 flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2 border border-rose-200/80 shadow-md backdrop-blur-md">
+      <div className="max-w-6xl 2xl:max-w-7xl mx-auto glass-card rounded-2xl lg:rounded-full px-3 sm:px-5 py-2 flex flex-col lg:flex-row items-center justify-between gap-2 lg:gap-4 border border-rose-200/80 shadow-md backdrop-blur-md">
 
         {/* Top row on Mobile / Left on Desktop: Brand Logo + Role Switcher + Action Buttons */}
-        <div className="w-full sm:w-auto flex items-center justify-between gap-1.5 sm:gap-3">
+        <div className="w-full lg:w-auto flex items-center justify-between gap-2 sm:gap-3 shrink-0">
           {/* Brand Logo & Website Title */}
           <div
             onClick={() => setActiveTab('home')}
             className="flex items-center space-x-2 sm:space-x-2.5 cursor-pointer group shrink-0"
           >
             {/* Logo image B & H rose gold heart */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <img
                 src="/img/logo.png"
                 alt="Bí Mật Đôi Ta"
@@ -103,7 +103,7 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
             </div>
 
             {/* Couple Avatars Mini */}
-            <div className="relative hidden xs:flex -space-x-1.5 overflow-hidden items-center">
+            <div className="relative hidden xs:flex -space-x-1.5 overflow-hidden items-center shrink-0">
               <img
                 src={coupleData.boy.avatar || '/images/avatar-boy.svg'}
                 alt={boyDisplayName}
@@ -116,27 +116,27 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
               />
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col shrink-0">
               <div className="flex items-center space-x-1.5">
-                <span className="font-serif font-bold text-xs sm:text-base text-slate-800 tracking-wide group-hover:text-rose-600 transition">
+                <span className="font-serif font-bold text-xs sm:text-base text-slate-800 tracking-wide group-hover:text-rose-600 transition whitespace-nowrap">
                   Bí Mật Đôi Ta
                 </span>
-                <span className="text-[10px] text-rose-500 font-bold hidden sm:inline-block bg-rose-100/80 px-1.5 py-0.2 rounded-full">
+                <span className="text-[10px] text-rose-500 font-bold hidden sm:inline-block bg-rose-100/80 px-1.5 py-0.2 rounded-full whitespace-nowrap">
                   B & H 💕
                 </span>
               </div>
-              <span className="text-[10px] text-rose-500 font-cursive truncate max-w-[90px] sm:max-w-none">
+              <span className="text-[10px] text-rose-500 font-cursive truncate max-w-[90px] sm:max-w-none whitespace-nowrap">
                 {boyDisplayName} & {girlDisplayName} • Yêu thương ✨
               </span>
             </div>
           </div>
 
           {/* BỘ CHỌN VAI TRÒ TOÀN CỤC (GLOBAL ROLE SWITCHER - CÓ PHÂN QUYỀN PIN) */}
-          <div className="flex items-center p-0.5 rounded-full bg-rose-100/90 border border-rose-200/90 shadow-2xs shrink-0">
+          <div className="flex items-center p-0.5 rounded-full bg-rose-100/90 border border-rose-200/90 shadow-2xs shrink-0 whitespace-nowrap">
             <button
               type="button"
               onClick={() => handleRoleClick('boy')}
-              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 ${
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 whitespace-nowrap ${
                 myRole === 'boy'
                   ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-xs scale-102 cursor-default'
                   : 'text-slate-600 hover:text-rose-600 cursor-pointer'
@@ -144,13 +144,13 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
               title={myRole === 'boy' ? `Bạn đang đăng nhập: ${boyDisplayName} (Đã khóa quyền 🔒)` : `Chuyển sang ${boyDisplayName} (Cần mã PIN)`}
             >
               <span>👑</span>
-              <span className="max-w-[42px] sm:max-w-[65px] truncate">{boyDisplayName}</span>
+              <span className="max-w-[50px] sm:max-w-[70px] truncate">{boyDisplayName}</span>
               {myRole === 'boy' && <ShieldCheck className="w-3 h-3 text-white shrink-0" />}
             </button>
             <button
               type="button"
               onClick={() => handleRoleClick('girl')}
-              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 ${
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 whitespace-nowrap ${
                 myRole === 'girl'
                   ? 'bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-xs scale-102 cursor-default'
                   : 'text-slate-600 hover:text-pink-600 cursor-pointer'
@@ -158,13 +158,13 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
               title={myRole === 'girl' ? `Bạn đang đăng nhập: ${girlDisplayName} (Đã khóa quyền 🔒)` : `Chuyển sang ${girlDisplayName} (Cần mã PIN)`}
             >
               <span>🎀</span>
-              <span className="max-w-[42px] sm:max-w-[65px] truncate">{girlDisplayName}</span>
+              <span className="max-w-[50px] sm:max-w-[70px] truncate">{girlDisplayName}</span>
               {myRole === 'girl' && <ShieldCheck className="w-3 h-3 text-white shrink-0" />}
             </button>
           </div>
 
-          {/* Mobile Right Action Buttons (Notification, Settings & Lock) */}
-          <div className="flex items-center space-x-1 sm:hidden">
+          {/* Mobile/Tablet Right Action Buttons (Notification, Settings & Lock) */}
+          <div className="flex items-center space-x-1 lg:hidden shrink-0">
             <button
               onClick={handleToggleNotification}
               className="p-1.5 rounded-full text-rose-500 hover:bg-rose-100/70 active:scale-95 transition relative"
@@ -198,9 +198,9 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
           </div>
         </div>
 
-        {/* Navigation Tabs (Optimized for iPhone Xs, Xs Max, Samsung S25 FE) */}
-        <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-1 overflow-x-auto no-scrollbar">
-          <nav className="flex items-center space-x-1 w-full sm:w-auto justify-between sm:justify-start">
+        {/* Navigation Tabs */}
+        <div className="w-full lg:w-auto flex items-center justify-between lg:justify-end gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+          <nav className="flex items-center space-x-1 w-full lg:w-auto justify-between lg:justify-start shrink-0">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -208,59 +208,55 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 sm:flex-initial shrink-0 relative flex items-center justify-center space-x-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap min-h-[34px] ${
+                  className={`flex-1 lg:flex-initial shrink-0 relative flex items-center justify-center space-x-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap min-h-[34px] ${
                     isActive
                       ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-md shadow-rose-200 scale-102'
                       : 'text-slate-600 hover:text-rose-600 hover:bg-rose-50/70 active:bg-rose-100/60'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-rose-400'}`} />
-                  <span className="text-[10.5px] sm:text-xs">{tab.shortLabel}</span>
+                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-rose-400'}`} />
+                  <span className="text-[10.5px] sm:text-xs whitespace-nowrap">{tab.shortLabel}</span>
                 </button>
               );
             })}
           </nav>
 
-          {/* Desktop Right Action Buttons */}
-          <div className="hidden sm:flex items-center space-x-1 pl-1 border-l border-rose-100 ml-1">
+          {/* Desktop Right Action Buttons (Sleek Circular Icons with tooltips) */}
+          <div className="hidden lg:flex items-center space-x-1.5 pl-2 border-l border-rose-200/80 ml-1 shrink-0">
             <button
               onClick={handleToggleNotification}
-              className={`px-2.5 py-1 rounded-full transition flex items-center gap-1 text-xs font-semibold ${
+              className={`p-2 rounded-full transition relative flex items-center justify-center shrink-0 ${
                 notifyPermission === 'granted'
-                  ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                  : 'text-rose-600 bg-rose-50 hover:bg-rose-100'
+                  ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80'
+                  : 'text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80'
               }`}
               title={notifyPermission === 'granted' ? 'Thông báo điện thoại đang bật' : 'Bật thông báo điện thoại'}
             >
               {notifyPermission === 'granted' ? (
                 <>
-                  <Bell className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Thông Báo Bật</span>
+                  <Bell className="w-4 h-4 text-emerald-600" />
+                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white" />
                 </>
               ) : (
-                <>
-                  <BellRing className="w-3.5 h-3.5 text-amber-500 animate-bounce" />
-                  <span>Bật Thông Báo</span>
-                </>
+                <BellRing className="w-4 h-4 text-amber-500 animate-bounce" />
               )}
             </button>
 
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="px-2.5 py-1 rounded-full text-rose-500 hover:text-rose-700 hover:bg-rose-100/70 transition flex items-center gap-1 text-xs font-semibold"
+              className="p-2 rounded-full text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-200 shrink-0"
               title="Cài đặt thông tin"
             >
-              <Settings className="w-3.5 h-3.5" />
-              <span>Cài Đặt</span>
+              <Settings className="w-4 h-4" />
             </button>
 
             {onLockPage && (
               <button
                 onClick={onLockPage}
-                className="p-1.5 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                className="p-2 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-200 shrink-0"
                 title="Khóa trang web"
               >
-                <Lock className="w-3.5 h-3.5" />
+                <Lock className="w-4 h-4" />
               </button>
             )}
           </div>
