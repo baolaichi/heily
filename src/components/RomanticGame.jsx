@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   Heart, Sparkles, CheckCircle2, Award, ArrowRight, 
-  RotateCcw, Mail, Utensils, Grid, HandMetal, Compass 
+  RotateCcw, Mail, Utensils, Grid, HandMetal, Compass, Puzzle 
 } from 'lucide-react';
 import { coupleConfig } from '../data/config';
 import { useCouple } from '../context/CoupleContext';
 import TicTacToeGame from './games/TicTacToeGame';
 import RPSGame from './games/RPSGame';
 import FoodWheelGame from './games/FoodWheelGame';
+import PuzzleGame from './games/PuzzleGame';
 
 export default function RomanticGame({ onGameCompleted }) {
   const { coupleData } = useCouple();
-  const [activeGame, setActiveGame] = useState('journey'); // 'journey' | 'tictactoe' | 'rps' | 'wheel'
+  const [activeGame, setActiveGame] = useState('journey'); // 'journey' | 'puzzle' | 'tictactoe' | 'rps' | 'wheel'
 
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -95,7 +96,8 @@ export default function RomanticGame({ onGameCompleted }) {
 
   const gameNav = [
     { id: 'journey', label: 'Hành Trình Yêu Thương', icon: Compass, badge: 'Chính' },
-    { id: 'tictactoe', label: 'Cờ Caro X/O', icon: Grid, badge: 'Đôi' },
+    { id: 'puzzle', label: 'Ghép Hình Đôi Ta', icon: Puzzle, badge: 'Online 🔥' },
+    { id: 'tictactoe', label: 'Cờ Caro X/O', icon: Grid, badge: 'Online' },
     { id: 'rps', label: 'Kéo Búa Bao', icon: HandMetal },
     { id: 'wheel', label: 'Hôm Nay Ăn Gì?', icon: Utensils, badge: 'Date' },
   ];
@@ -132,7 +134,10 @@ export default function RomanticGame({ onGameCompleted }) {
         </div>
       </div>
 
-      {/* GAME 2: TIC TAC TOE */}
+      {/* GAME: GHÉP HÌNH ĐÔI TA (ONLINE & SOLO) */}
+      {activeGame === 'puzzle' && <PuzzleGame />}
+
+      {/* GAME 2: TIC TAC TOE (ONLINE & OFFLINE) */}
       {activeGame === 'tictactoe' && <TicTacToeGame />}
 
       {/* GAME 3: ROCK PAPER SCISSORS */}

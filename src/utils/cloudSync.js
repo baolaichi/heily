@@ -416,3 +416,88 @@ export function parseSyncCode(code) {
     return null;
   }
 }
+
+/**
+ * Đẩy trạng thái game online lên Firebase Realtime Database
+ */
+export async function syncPushGameState(gameId, state) {
+  try {
+    const base = getFirebaseUrl().trim().replace(/\/$/, '');
+    const url = `${base}/games/${gameId}.json`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...state,
+        lastUpdated: Date.now(),
+      }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('Lỗi khi cập nhật trạng thái game:', err);
+    return false;
+  }
+}
+
+/**
+ * Kéo trạng thái game online từ Firebase Realtime Database
+ */
+export async function syncPullGameState(gameId) {
+  try {
+    const base = getFirebaseUrl().trim().replace(/\/$/, '');
+    const url = `${base}/games/${gameId}.json`;
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.error('Lỗi khi kéo trạng thái game:', err);
+    return null;
+  }
+}
+
+/**
+ * Lắng nghe cập nhật game thời gian thực (SSE)
+ */
+export function subscribeToGame(gameId, onStateChange) {
+  const url = getFirebaseUrl();
+  if (!url || typeof window === 'undefined' || !window.EventSource) {
+    return () => {};
+  }
+
+  const sseUrl = `${url.trim().replace(/\/$/, '')}/games/${gameId}.json`;
+  let es = null;
+
+  try {
+    es = new EventSource(sseUrl);
+    es.addEventListener('put', (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (!payload) return;
+        if (payload.path === '/' && payload.data) {
+          onStateChange(payload.data);
+        } else if (payload.data !== undefined) {
+          syncPullGameState(gameId).then((full) => {
+            if (full) onStateChange(full);
+          });
+        }
+      } catch (e) {
+        console.warn('Lỗi parse SSE game:', e);
+      }
+    });
+
+    es.onerror = () => {};
+  } catch (err) {
+    console.error('Lỗi kết nối SSE game:', err);
+  }
+
+  return () => {
+    if (es) {
+      es.close();
+      es = null;
+    }
+  };
+}
+
