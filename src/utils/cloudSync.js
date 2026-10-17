@@ -242,6 +242,156 @@ export const syncPushToCloud = syncPushCoupleData;
 export const syncPullFromCloud = syncPullCoupleData;
 
 /**
+ * Đẩy một tin nhắn mới lên Firebase Realtime Database
+ */
+export async function syncSendMessage(message) {
+  try {
+    const base = getFirebaseUrl().trim().replace(/\/$/, '');
+    const url = `${base}/messages/${message.id}.json`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('Lỗi khi gửi tin nhắn:', err);
+    return false;
+  }
+}
+
+/**
+ * Kéo danh sách tin nhắn từ Firebase Realtime Database
+ */
+export async function syncPullMessages() {
+  try {
+    const base = getFirebaseUrl().trim().replace(/\/$/, '');
+    const url = `${base}/messages.json`;
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!data) return [];
+    const list = Object.values(data);
+    list.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    return list;
+  } catch (err) {
+    console.error('Lỗi khi kéo tin nhắn:', err);
+    return [];
+  }
+}
+
+/**
+ * Xóa một tin nhắn khỏi Firebase
+ */
+export async function syncDeleteMessage(messageId) {
+  try {
+    const base = getFirebaseUrl().trim().replace(/\/$/, '');
+    const url = `${base}/messages/${messageId}.json`;
+    const res = await fetch(url, { method: 'DELETE' });
+    return res.ok;
+  } catch (err) {
+    console.error('Lỗi khi xóa tin nhắn:', err);
+    return false;
+  }
+}
+
+/**
+ * Thả cảm xúc cho tin nhắn (reaction)
+ */
+export async function syncReactToMessage(messageId, userRole, emoji) {
+  try {
+    const base = getFirebaseUrl().trim().replace(/\/$/, '');
+    const url = `${base}/messages/${messageId}/reactions/${userRole}.json`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(emoji),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('Lỗi khi thả reaction:', err);
+    return false;
+  }
+}
+
+/**
+ * Lắng nghe tin nhắn mới thời gian thực bằng Firebase SSE (Server-Sent Events)
+ */
+export function subscribeToMessages(onMessagesUpdate) {
+  const url = getFirebaseUrl();
+  if (!url || typeof window === 'undefined' || !window.EventSource) {
+    return () => {};
+  }
+
+  const sseUrl = `${url.trim().replace(/\/$/, '')}/messages.json`;
+  let es = null;
+  let cache = {};
+
+  try {
+    es = new EventSource(sseUrl);
+
+    const handleEvent = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (!payload) return;
+
+        const path = payload.path || '/';
+        const data = payload.data;
+
+        if (path === '/') {
+          cache = data && typeof data === 'object' ? { ...data } : {};
+        } else {
+          const parts = path.replace(/^\//, '').split('/');
+          const msgId = parts[0];
+
+          if (parts.length === 1) {
+            if (data === null) {
+              delete cache[msgId];
+            } else {
+              cache[msgId] = data;
+            }
+          } else if (parts.length >= 2 && cache[msgId]) {
+            if (parts[1] === 'reactions') {
+              const role = parts[2];
+              if (!cache[msgId].reactions) cache[msgId].reactions = {};
+              if (role) {
+                if (data === null) delete cache[msgId].reactions[role];
+                else cache[msgId].reactions[role] = data;
+              } else {
+                cache[msgId].reactions = data || {};
+              }
+            }
+          }
+        }
+
+        const sorted = Object.values(cache).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+        onMessagesUpdate(sorted);
+      } catch (e) {
+        console.error('Lỗi parse SSE tin nhắn:', e);
+      }
+    };
+
+    es.addEventListener('put', handleEvent);
+    es.addEventListener('patch', handleEvent);
+    es.onerror = () => {
+      // EventSource tự động reconnect
+    };
+  } catch (err) {
+    console.error('Lỗi khởi tạo EventSource tin nhắn:', err);
+  }
+
+  return () => {
+    if (es) {
+      es.close();
+      es = null;
+    }
+  };
+}
+
+/**
  * Xuất Mã Đồng Bộ Nhanh 1 chạm (Base64)
  */
 export function generateSyncCode(data) {

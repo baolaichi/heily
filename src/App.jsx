@@ -11,6 +11,7 @@ import FloatingHearts from './components/FloatingHearts';
 import SettingsModal from './components/SettingsModal';
 import LockScreen from './components/LockScreen';
 import Footer from './components/Footer';
+import CoupleChat from './components/CoupleChat';
 
 function MainApp() {
   const [activeTab, setActiveTab] = useState('home');
@@ -87,6 +88,9 @@ function MainApp() {
 
       {/* Settings Modal (Tùy chỉnh ngày yêu, upload avatar, biệt danh) */}
       <SettingsModal />
+
+      {/* Real-time Couple Secret Chat (Hộp Chat Đôi Ta) */}
+      <CoupleChat />
 
       {/* Floating Music Widget */}
       <MusicPlayer autoTriggerPlay={triggerAudioPlay} />
