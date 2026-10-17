@@ -14,7 +14,7 @@ const CHAT_ROLE_KEY = 'bimatdoita_chat_sender_role';
 const LAST_READ_KEY = 'bimatdoita_chat_last_read';
 
 export default function CoupleChat() {
-  const { coupleData } = useCouple();
+  const { coupleData, myRole, setMyRole } = useCouple();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -29,10 +29,8 @@ export default function CoupleChat() {
   const fileInputRef = useRef(null);
   const chatBoxRef = useRef(null);
 
-  // Role: 'boy' | 'girl'
-  const [userRole, setUserRole] = useState(() => {
-    return localStorage.getItem(CHAT_ROLE_KEY) || '';
-  });
+  // Role: Đồng bộ trực tiếp với vai trò toàn cục từ Header
+  const userRole = myRole || 'boy';
 
   // Đóng khung chat khi nhấn phím Escape
   useEffect(() => {
@@ -131,8 +129,10 @@ export default function CoupleChat() {
   };
 
   const handleSelectRole = (role) => {
-    setUserRole(role);
-    localStorage.setItem(CHAT_ROLE_KEY, role);
+    setMyRole(role);
+    try {
+      localStorage.setItem(CHAT_ROLE_KEY, role);
+    } catch {}
     setShowRolePicker(false);
   };
 

@@ -9,15 +9,7 @@ import { syncPushGameState, syncPullGameState, subscribeToGame } from '../utils/
 import { playNotificationChime } from '../utils/notificationService';
 
 export default function HeartbeatTouch() {
-  const { coupleData } = useCouple();
-
-  const [myRole, setMyRole] = useState(() => {
-    try {
-      return localStorage.getItem('user_chat_role') || 'boy';
-    } catch {
-      return 'boy';
-    }
-  });
+  const { coupleData, myRole, setMyRole } = useCouple();
 
   const [isMyTouching, setIsMyTouching] = useState(false);
   const [isPartnerTouching, setIsPartnerTouching] = useState(false);

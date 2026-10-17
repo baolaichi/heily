@@ -27,15 +27,7 @@ function timeAgo(dateString) {
 }
 
 export default function LivePhotoWidget() {
-  const { coupleData } = useCouple();
-
-  const [myRole, setMyRole] = useState(() => {
-    try {
-      return localStorage.getItem('user_chat_role') || 'boy';
-    } catch {
-      return 'boy';
-    }
-  });
+  const { coupleData, myRole, setMyRole } = useCouple();
 
   const boyName = coupleData.boy.nickname || coupleData.boy.name || 'Bug';
   const girlName = coupleData.girl.nickname || coupleData.girl.name || 'Heily';

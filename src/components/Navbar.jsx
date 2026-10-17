@@ -7,7 +7,7 @@ import { useCouple } from '../context/CoupleContext';
 import { getNotificationPermission, requestNotificationPermission, sendLocalNotification } from '../utils/notificationService';
 
 export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
-  const { coupleData, setIsSettingsOpen } = useCouple();
+  const { coupleData, setIsSettingsOpen, myRole, setMyRole } = useCouple();
   const [notifyPermission, setNotifyPermission] = useState(() => getNotificationPermission());
 
   useEffect(() => {
@@ -36,15 +36,15 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
     { id: 'capsule', label: 'Hộp Thư', icon: Mail, shortLabel: 'Hộp Thư' },
   ];
 
-  const boyDisplayName = (coupleData.boy?.name || 'Chàng Trai').trim().split(' ').pop();
-  const girlDisplayName = (coupleData.girl?.name || 'Cô Gái').trim().split(' ').pop();
+  const boyDisplayName = (coupleData.boy?.nickname || coupleData.boy?.name || 'Bug').trim().split(' ').pop();
+  const girlDisplayName = (coupleData.girl?.nickname || coupleData.girl?.name || 'Heily').trim().split(' ').pop();
 
   return (
     <header className="sticky top-0 z-30 w-full px-2 sm:px-4 pt-safe pb-1.5 transition-all">
       <div className="max-w-5xl mx-auto glass-card rounded-2xl md:rounded-full px-2.5 sm:px-4 py-2 flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2 border border-rose-200/80 shadow-md backdrop-blur-md">
 
-        {/* Top row on Mobile / Left on Desktop: Brand Logo + Action Buttons */}
-        <div className="w-full sm:w-auto flex items-center justify-between">
+        {/* Top row on Mobile / Left on Desktop: Brand Logo + Role Switcher + Action Buttons */}
+        <div className="w-full sm:w-auto flex items-center justify-between gap-1.5 sm:gap-3">
           {/* Brand Logo & Website Title */}
           <div
             onClick={() => setActiveTab('home')}
@@ -82,10 +82,40 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
                   B & H 💕
                 </span>
               </div>
-              <span className="text-[10px] text-rose-500 font-cursive truncate max-w-[130px] sm:max-w-none">
-                {boyDisplayName} & {girlDisplayName} • Hành trình yêu thương ✨
+              <span className="text-[10px] text-rose-500 font-cursive truncate max-w-[90px] sm:max-w-none">
+                {boyDisplayName} & {girlDisplayName} • Yêu thương ✨
               </span>
             </div>
+          </div>
+
+          {/* BỘ CHỌN VAI TRÒ TOÀN CỤC (GLOBAL ROLE SWITCHER - BẠN LÀ AI?) */}
+          <div className="flex items-center p-0.5 rounded-full bg-rose-100/90 border border-rose-200/90 shadow-2xs shrink-0">
+            <button
+              type="button"
+              onClick={() => setMyRole('boy')}
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 ${
+                myRole === 'boy'
+                  ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-xs scale-102'
+                  : 'text-slate-600 hover:text-rose-600'
+              }`}
+              title={`Bạn đang là ${boyDisplayName}`}
+            >
+              <span>👑</span>
+              <span className="max-w-[42px] sm:max-w-[65px] truncate">{boyDisplayName}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMyRole('girl')}
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 ${
+                myRole === 'girl'
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-xs scale-102'
+                  : 'text-slate-600 hover:text-pink-600'
+              }`}
+              title={`Bạn đang là ${girlDisplayName}`}
+            >
+              <span>🎀</span>
+              <span className="max-w-[42px] sm:max-w-[65px] truncate">{girlDisplayName}</span>
+            </button>
           </div>
 
           {/* Mobile Right Action Buttons (Notification, Settings & Lock) */}

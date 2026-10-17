@@ -10,17 +10,10 @@ import {
 } from '../../utils/cloudSync';
 
 export default function PuzzleGame() {
-  const { coupleData } = useCouple();
+  const { coupleData, myRole, setMyRole } = useCouple();
 
   // Mode: 'solo' | 'online'
   const [playMode, setPlayMode] = useState('online');
-  const [myRole, setMyRole] = useState(() => {
-    try {
-      return localStorage.getItem('puzzle_my_role') || 'boy';
-    } catch {
-      return 'boy';
-    }
-  });
 
   // Grid size: 3 (3x3 = 9 tiles) or 4 (4x4 = 16 tiles)
   const [gridSize, setGridSize] = useState(3);

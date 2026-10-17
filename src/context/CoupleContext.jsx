@@ -38,6 +38,23 @@ export function CoupleProvider({ children }) {
   const [cloudStatus, setCloudStatus] = useState('idle'); // 'idle' | 'syncing' | 'synced' | 'error'
   const [firebaseUrl, setFirebaseUrlState] = useState(() => getFirebaseUrl());
 
+  // Vai trò người dùng toàn cục ('boy' hoặc 'girl')
+  const [myRole, setMyRoleState] = useState(() => {
+    try {
+      return localStorage.getItem('user_chat_role') || 'boy';
+    } catch {
+      return 'boy';
+    }
+  });
+
+  const setMyRole = (newRole) => {
+    setMyRoleState(newRole);
+    try {
+      localStorage.setItem('user_chat_role', newRole);
+      localStorage.setItem('puzzle_my_role', newRole);
+    } catch (e) {}
+  };
+
   const playTrackDirectly = (track) => {
     if (!track) return;
     setDirectPlayTrack({ ...track, timestamp: Date.now() });
@@ -331,6 +348,8 @@ export function CoupleProvider({ children }) {
         exportMySyncCode,
         importMySyncCode,
         checkCloudUpdates,
+        myRole,
+        setMyRole,
       }}
     >
       {children}

@@ -9,15 +9,7 @@ import { syncPushGameState, syncPullGameState, subscribeToGame } from '../utils/
 import { playNotificationChime } from '../utils/notificationService';
 
 export default function LovePlant() {
-  const { coupleData } = useCouple();
-
-  const [myRole, setMyRole] = useState(() => {
-    try {
-      return localStorage.getItem('user_chat_role') || 'boy';
-    } catch {
-      return 'boy';
-    }
-  });
+  const { coupleData, myRole, setMyRole } = useCouple();
 
   // State cây tình yêu khởi đầu từ Hạt Mầm (Cấp 1 - 0 EXP)
   const [plantData, setPlantData] = useState({
