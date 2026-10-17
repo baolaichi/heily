@@ -219,7 +219,7 @@ export default function CoupleChat() {
           setIsOpen(!isOpen);
           if (!userRole) setShowRolePicker(true);
         }}
-        className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-40 group flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-full shadow-lg shadow-rose-400/40 hover:shadow-xl hover:shadow-rose-400/60 active:scale-95 transition-all duration-300 border border-white/40 backdrop-blur-md"
+        className="fixed bottom-24 right-4 sm:bottom-6 sm:left-6 sm:right-auto z-40 group flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-full shadow-lg shadow-rose-400/40 hover:shadow-xl hover:shadow-rose-400/60 active:scale-95 transition-all duration-300 border border-white/40 backdrop-blur-md"
         aria-label="Mở khung chat đôi ta"
       >
         <div className="relative">
@@ -235,10 +235,10 @@ export default function CoupleChat() {
         </span>
       </button>
 
-      {/* KHUNG CHAT (Bottom Sheet / Modal) */}
+      {/* KHUNG CHAT (Bottom Sheet on Mobile / Messenger Popup on Desktop) */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-950/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-gradient-to-b from-rose-50/95 via-white/95 to-pink-50/95 w-full sm:max-w-md h-[90vh] sm:h-[620px] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-rose-200/80 flex flex-col overflow-hidden pb-safe relative">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-end justify-center sm:justify-start sm:p-6 bg-slate-950/40 sm:bg-slate-950/20 backdrop-blur-sm sm:backdrop-blur-none animate-in fade-in duration-200">
+          <div className="bg-gradient-to-b from-rose-50/98 via-white/98 to-pink-50/98 w-full sm:w-[400px] h-[90vh] sm:h-[580px] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-rose-200/90 flex flex-col overflow-hidden pb-safe relative sm:mb-16">
             
             {/* Header */}
             <div className="p-3.5 sm:p-4 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white flex items-center justify-between shadow-md">
