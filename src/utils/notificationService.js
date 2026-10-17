@@ -195,4 +195,13 @@ export function notifyLocketReaction(partnerName, emoji, caption) {
     tag: `locket_react_${Date.now()}`,
   });
 }
-
+// 8. Thông báo thư vừa mở khóa đúng ngày
+export function notifyCapsuleUnlocked(title) {
+  sendLocalNotification({
+    title: `📨 Hộp Thư Đã Mở Khóa Hôm Nay!`,
+    body: title
+      ? `Bức thư “${title}” đã đến ngày mở. Hãy vào Hộp Thư để đọc nhé 💕`
+      : 'Một bức thư bí mật đã đến ngày mở khóa. Hãy vào đọc ngày nhé 💕',
+    tag: `capsule_unlock_${Date.now()}`,
+  });
+}

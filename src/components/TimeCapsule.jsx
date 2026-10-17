@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { coupleConfig } from '../data/config';
 import { syncPushCapsules, syncPullCapsules, subscribeToFirebase } from '../utils/cloudSync';
-import { notifyNewCapsule } from '../utils/notificationService';
+import { notifyNewCapsule, notifyCapsuleUnlocked } from '../utils/notificationService';
 import VietnameseDatePicker from './VietnameseDatePicker';
 import { formatVietnameseFull, formatVietnameseDateOnly } from '../utils/dateUtils';
 
@@ -38,6 +38,10 @@ export default function TimeCapsule() {
   const [editingCapsule, setEditingCapsule] = useState(null);
 
   const initialCapsuleCountRef = React.useRef(0);
+  // Track capsules already notified on unlock so we don't spam on refresh
+  const notifiedUnlockRef = React.useRef(new Set(
+    (() => { try { return JSON.parse(localStorage.getItem('heily_notified_unlocks') || '[]'); } catch { return []; } })()
+  ));
 
   // Kéo thư từ Firebase & lắng nghe thời gian thực tức thì
   useEffect(() => {
@@ -70,7 +74,31 @@ export default function TimeCapsule() {
     };
   }, []);
 
-  // Lưu tự động vào LocalStorage và đẩy lên Firebase đồng bộ 2 máy
+  // Scheduler: kiem tra thu den ngay mo khoa moi 60 giay
+  useEffect(() => {
+    const checkUnlocks = () => {
+      const now = new Date();
+      capsules.forEach((capsule) => {
+        if (!capsule.isLocked) return;
+        const unlockDate = new Date(capsule.unlockDate);
+        if (unlockDate <= now && !notifiedUnlockRef.current.has(capsule.id)) {
+          notifyCapsuleUnlocked(capsule.title);
+          notifiedUnlockRef.current.add(capsule.id);
+          try {
+            localStorage.setItem(
+              'heily_notified_unlocks',
+              JSON.stringify([...notifiedUnlockRef.current])
+            );
+          } catch (e) {}
+        }
+      });
+    };
+    checkUnlocks(); // Kiem tra ngay khi mount
+    const interval = setInterval(checkUnlocks, 60_000);
+    return () => clearInterval(interval);
+  }, [capsules]);
+
+  // Luu tu dong vao LocalStorage va day len Firebase dong bo 2 may
   const saveAllCapsules = (newList) => {
     setCapsules(newList);
     try {
@@ -429,6 +457,12 @@ export default function TimeCapsule() {
                     }`}>
                       {isUnlocked ? 'Đã Mở Khóa' : 'Đang Khóa Hẹn Giờ'}
                     </span>
+                    {/* Badge: vua mo khoa trong 24h qua */}
+                    {isDatePassed && capsule.isLocked && (new Date() - new Date(capsule.unlockDate)) < 86400000 && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-300 animate-pulse">
+                        🎉 Vừa mở hôm nay!
+                      </span>
+                    )}
                   </div>
 
                   {/* Nút Chỉnh Sửa & Xóa */}

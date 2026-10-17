@@ -5,7 +5,7 @@ import {
   Trash2, Video, Play, Film, Filter 
 } from 'lucide-react';
 import { coupleConfig } from '../data/config';
-import { getMemoriesFromDB, saveMemoryToDB, deleteMemoryFromDB, clearAllDefaultMemories } from '../utils/memoriesDB';
+import { getMemoriesFromDB, saveMemoryToDB, deleteMemoryFromDB, clearAllDefaultMemories, getMemoriesStorageInfo } from '../utils/memoriesDB';
 import { syncPushMemories, syncPullMemories, subscribeToFirebase } from '../utils/cloudSync';
 import { formatVietnameseFull, formatVietnameseDateOnly } from '../utils/dateUtils';
 import AddMemoryModal from './AddMemoryModal';
@@ -17,10 +17,13 @@ export default function MemoryTimeline() {
   const [likes, setLikes] = useState({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [filterType, setFilterType] = useState('all'); // 'all' | 'video' | 'image'
+  const [storageInfo, setStorageInfo] = useState(null);
 
   // Tải kỷ niệm từ IndexedDB & Firebase khi khởi động
   useEffect(() => {
     loadAllMemories();
+    // Lấy thông tin dung lượng lưu trữ
+    getMemoriesStorageInfo().then(setStorageInfo);
 
     // Kéo dữ liệu kỷ niệm từ đám mây Firebase
     syncPullMemories().then(async (remoteItems) => {
@@ -181,6 +184,20 @@ export default function MemoryTimeline() {
             </button>
           ))}
         </div>
+
+        {/* Thong tin dung luong luu tru */}
+        {storageInfo && (
+          <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400">
+            <span>💾 Đang dùng: <strong className="text-slate-600">{storageInfo.used}</strong> / {storageInfo.total}</span>
+            <div className="w-20 h-1 rounded-full bg-rose-100 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-rose-400 to-pink-500 transition-all"
+                style={{ width: `${Math.min(storageInfo.percent, 100)}%` }}
+              />
+            </div>
+            <span className={storageInfo.percent > 80 ? 'text-rose-500 font-bold' : ''}>{storageInfo.percent}%</span>
+          </div>
+        )}
       </div>
 
       {/* EMPTY STATE: Khi chưa có kỷ niệm nào */}

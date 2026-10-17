@@ -3,7 +3,7 @@ import {
   X, Camera, Video, MapPin, Tag, Calendar, 
   Sparkles, Upload, Save, Check, Link 
 } from 'lucide-react';
-import { compressImageToBase64 } from '../utils/cloudSync';
+import { compressImageToBlob } from '../utils/memoriesDB';
 import { notifyNewMemory } from '../utils/notificationService';
 import VietnameseDatePicker from './VietnameseDatePicker';
 import { formatVietnameseFull } from '../utils/dateUtils';
@@ -53,26 +53,49 @@ export default function AddMemoryModal({ isOpen, onClose, onSaveMemory }) {
 
     setIsSaving(true);
     try {
-      let finalMediaUrl = mediaUrl.trim();
-      if (uploadMode === 'file' && selectedFile) {
-        finalMediaUrl = await compressImageToBase64(selectedFile, 1000, 0.75);
-      }
-      if (!finalMediaUrl) {
-        finalMediaUrl = previewSrc || 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=800&auto=format&fit=crop';
-      }
+      let newMemory;
 
-      const newMemory = {
-        id: `memory-${Date.now()}`,
-        title: title.trim(),
-        date: date,
-        location: location.trim() || 'Nơi quen thuộc',
-        tag: tag,
-        description: description.trim(),
-        mediaType: mediaType,
-        mediaUrl: finalMediaUrl,
-        likes: 0,
-        createdAt: new Date().toISOString(),
-      };
+      if (uploadMode === 'file' && selectedFile) {
+        // Lưu dạng Blob thực (binary) — tiết kiệm ~30% so với base64
+        const blob = await compressImageToBlob(
+          selectedFile,
+          mediaType === 'video' ? undefined : 1200,
+          0.82
+        );
+        newMemory = {
+          id: `memory-${Date.now()}`,
+          title: title.trim(),
+          date: date,
+          location: location.trim() || 'Nơi quen thuộc',
+          tag: tag,
+          description: description.trim(),
+          mediaType: mediaType,
+          mediaUrl: null,        // Không dùng base64 nữa
+          mediaBlob: blob,       // Lưu Blob thực vào IndexedDB
+          mediaMimeType: blob?.type || (mediaType === 'video' ? 'video/mp4' : 'image/jpeg'),
+          likes: 0,
+          createdAt: new Date().toISOString(),
+        };
+      } else {
+        // Chế độ URL: vẫn dùng mediaUrl bình thường
+        let finalUrl = mediaUrl.trim();
+        if (!finalUrl) {
+          finalUrl = 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=800&auto=format&fit=crop';
+        }
+        newMemory = {
+          id: `memory-${Date.now()}`,
+          title: title.trim(),
+          date: date,
+          location: location.trim() || 'Nơi quen thuộc',
+          tag: tag,
+          description: description.trim(),
+          mediaType: mediaType,
+          mediaUrl: finalUrl,
+          mediaBlob: null,
+          likes: 0,
+          createdAt: new Date().toISOString(),
+        };
+      }
 
       await onSaveMemory(newMemory);
       notifyNewMemory(newMemory.title);
@@ -221,9 +244,9 @@ export default function AddMemoryModal({ isOpen, onClose, onSaveMemory }) {
                   onChange={handleFileChange}
                   className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-rose-100 file:text-rose-700 hover:file:bg-rose-200 cursor-pointer"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Hỗ trợ ảnh (.jpg, .png, .webp) và video (.mp4, .mov, .webm) lưu trữ trực tiếp trên thiết bị bằng IndexedDB.
-                </p>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Ảnh lưu dạng Blob binary (tiết kiệm ~30% so với base64). Video giữ nguyên chất lượng gốc. Tất cả lưu an toàn trên thiết bị bằng IndexedDB 🔒
+              </p>
               </div>
             ) : (
               <div>
