@@ -60,6 +60,20 @@ export default function CoupleChat() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
+  // Lắng nghe sự kiện mở chat từ bên ngoài (khi trả lời ảnh Locket...)
+  useEffect(() => {
+    const handleExternalOpen = () => {
+      setIsOpen(true);
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 300);
+    };
+    window.addEventListener('open_couple_chat', handleExternalOpen);
+    return () => window.removeEventListener('open_couple_chat', handleExternalOpen);
+  }, []);
+
   const boyName = coupleData?.boy?.nickname || coupleData?.boy?.name || 'Anh';
   const girlName = coupleData?.girl?.nickname || coupleData?.girl?.name || 'Em';
   const boyAvatar = coupleData?.boy?.avatar || '/images/avatar-boy.svg';

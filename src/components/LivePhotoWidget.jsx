@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   Camera, Heart, Sparkles, Send, Image as ImageIcon, 
-  Clock, X, History, RefreshCw, Upload, Maximize2 
+  Clock, X, History, RefreshCw, Upload, Maximize2, 
+  ChevronLeft, ChevronRight, MessageCircle, MessageSquareShare 
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import { 
-  syncPushGameState, syncPullGameState, subscribeToGame, compressImageToBase64 
+  syncPushGameState, syncPullGameState, subscribeToGame, 
+  compressImageToBase64, syncSendMessage 
 } from '../utils/cloudSync';
 import { playNotificationChime } from '../utils/notificationService';
 
@@ -31,6 +33,8 @@ export default function LivePhotoWidget() {
 
   const boyName = coupleData.boy.nickname || coupleData.boy.name || 'Bug';
   const girlName = coupleData.girl.nickname || coupleData.girl.name || 'Heily';
+  const partnerRole = myRole === 'boy' ? 'girl' : 'boy';
+  const partnerName = myRole === 'boy' ? girlName : boyName;
 
   // State Locket Photo
   const [locketData, setLocketData] = useState(() => {
@@ -39,10 +43,17 @@ export default function LivePhotoWidget() {
       if (saved) return JSON.parse(saved);
     } catch (e) {}
     return {
-      current: null, // { id, senderRole, senderName, image, caption, timestamp, reactions }
+      current: null, // { id, senderRole, senderName, image, caption, timestamp, reactions: { boy: '❤️', girl: '🥰' } }
       history: [],
     };
   });
+
+  // Vị trí ảnh đang xem (0: ảnh mới nhất, 1, 2... là các ảnh trước đó)
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Ô nhập trả lời ảnh nhảy vào tin nhắn
+  const [replyInput, setReplyInput] = useState('');
+  const [isReplying, setIsReplying] = useState(false);
 
   // Modal chụp/gửi ảnh mới
   const [showCaptureModal, setShowCaptureModal] = useState(false);
@@ -58,6 +69,20 @@ export default function LivePhotoWidget() {
   const fileInputRef = useRef(null);
   const lastTimestampRef = useRef(locketData.current?.timestamp || '');
 
+  // Touch Swipe Gesture References
+  const touchStartXRef = useRef(null);
+  const touchEndXRef = useRef(null);
+
+  // Danh sách emoji cảm xúc phong cách Locket
+  const reactionEmojis = [
+    { emoji: '❤️', label: 'Yêu thích' },
+    { emoji: '🥰', label: 'Ngọt ngào' },
+    { emoji: '😂', label: 'Cười xỉu' },
+    { emoji: '🔥', label: 'Cháy quá' },
+    { emoji: '🥺', label: 'Nhớ nè' },
+    { emoji: '💋', label: 'Nụ hôn' },
+  ];
+
   // Gợi ý caption nhanh phong cách Locket
   const quickCaptions = [
     'Đang nhớ em 💕',
@@ -68,6 +93,18 @@ export default function LivePhotoWidget() {
     'Thời tiết hôm nay đẹp ghê ☀️',
     'Bận rộn nhưng luôn nghĩ về người yêu ✨',
   ];
+
+  // Danh sách toàn bộ các ảnh Locket (ảnh mới nhất đầu tiên, kế tiếp là lịch sử)
+  const allPhotos = [
+    ...(locketData.current ? [locketData.current] : []),
+    ...(Array.isArray(locketData.history) ? locketData.history : [])
+  ].filter((photo, index, self) => 
+    photo && photo.image && index === self.findIndex(p => p.id === photo.id)
+  );
+
+  // Đảm bảo chỉ số nằm trong khoảng hợp lệ
+  const safeIndex = Math.min(Math.max(0, currentIndex), Math.max(0, allPhotos.length - 1));
+  const activePhoto = allPhotos[safeIndex] || null;
 
   // Lắng nghe dữ liệu Locket thời gian thực từ Firebase
   useEffect(() => {
@@ -90,6 +127,9 @@ export default function LivePhotoWidget() {
       if (remote.current.timestamp && remote.current.timestamp !== lastTimestampRef.current) {
         lastTimestampRef.current = remote.current.timestamp;
         
+        // Tự động chuyển về ảnh mới nhất vừa gửi
+        setCurrentIndex(0);
+
         // Chỉ rung/kêu nếu không phải chính mình gửi
         if (remote.current.senderRole !== myRole) {
           playNotificationChime();
@@ -116,13 +156,40 @@ export default function LivePhotoWidget() {
     };
   }, [myRole]);
 
+  // XỬ LÝ VUỐT (SWIPE GESTURE) TRÁI / PHẢI
+  const handleTouchStart = (e) => {
+    touchStartXRef.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndXRef.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartXRef.current || !touchEndXRef.current) return;
+    const distance = touchStartXRef.current - touchEndXRef.current;
+    const isLeftSwipe = distance > 45;
+    const isRightSwipe = distance < -45;
+
+    if (isLeftSwipe && safeIndex < allPhotos.length - 1) {
+      // Vuốt sang trái -> Xem ảnh cũ hơn trong lịch sử
+      setCurrentIndex((prev) => Math.min(allPhotos.length - 1, prev + 1));
+    }
+    if (isRightSwipe && safeIndex > 0) {
+      // Vuốt sang phải -> Xem ảnh mới hơn
+      setCurrentIndex((prev) => Math.max(0, prev - 1));
+    }
+
+    touchStartXRef.current = null;
+    touchEndXRef.current = null;
+  };
+
   // Xử lý khi chọn/chụp ảnh từ máy
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
-      // Nén ảnh chất lượng tối ưu cho truyền nhanh
       const base64 = await compressImageToBase64(file, 900, 0.78);
       if (base64) {
         setCapturedImage(base64);
@@ -152,13 +219,12 @@ export default function LivePhotoWidget() {
       image: capturedImage,
       caption: captionInput.trim(),
       timestamp: nowIso,
-      reactions: 0,
+      reactions: {},
     };
 
     const previousHistory = Array.isArray(locketData.history) ? locketData.history : [];
-    // Giữ tối đa 25 bức ảnh gần nhất trong nhật ký
     const updatedHistory = locketData.current 
-      ? [locketData.current, ...previousHistory].slice(0, 25)
+      ? [locketData.current, ...previousHistory].slice(0, 30)
       : previousHistory;
 
     const updatedData = {
@@ -167,6 +233,7 @@ export default function LivePhotoWidget() {
     };
 
     setLocketData(updatedData);
+    setCurrentIndex(0); // Nhảy về xem ảnh mới nhất vừa đăng
     lastTimestampRef.current = nowIso;
     try {
       localStorage.setItem('heily_locket_photo', JSON.stringify(updatedData));
@@ -188,31 +255,46 @@ export default function LivePhotoWidget() {
     setIsSubmitting(false);
   };
 
-  // Thả tim vào ảnh đối phương
-  const handleReactHeart = async () => {
-    if (!locketData.current) return;
+  // THẢ CẢM XÚC (EMOJI REACTION)
+  const handleReactEmoji = async (emoji) => {
+    if (!activePhoto) return;
 
     playNotificationChime();
     confetti({
-      particleCount: 25,
+      particleCount: 26,
       spread: 60,
       origin: { y: 0.7 },
-      colors: ['#f43f5e', '#fb7185', '#fda4af'],
+      colors: ['#f43f5e', '#ec4899', '#fb7185', '#ffd166'],
     });
 
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate(100);
+      navigator.vibrate(70);
     }
 
-    const currentReactions = Number(locketData.current.reactions || 0) + 1;
-    const updatedCurrent = {
-      ...locketData.current,
-      reactions: currentReactions,
+    const prevReactions = typeof activePhoto.reactions === 'object' && activePhoto.reactions !== null
+      ? { ...activePhoto.reactions }
+      : {};
+
+    // Gán emoji của vai trò hiện tại
+    prevReactions[myRole] = emoji;
+
+    const updatedPhoto = {
+      ...activePhoto,
+      reactions: prevReactions,
     };
 
+    let newCurrent = locketData.current;
+    let newHistory = Array.isArray(locketData.history) ? [...locketData.history] : [];
+
+    if (newCurrent && newCurrent.id === activePhoto.id) {
+      newCurrent = updatedPhoto;
+    } else {
+      newHistory = newHistory.map(p => p.id === activePhoto.id ? updatedPhoto : p);
+    }
+
     const updatedData = {
-      ...locketData,
-      current: updatedCurrent,
+      current: newCurrent,
+      history: newHistory,
     };
 
     setLocketData(updatedData);
@@ -223,8 +305,53 @@ export default function LivePhotoWidget() {
     await syncPushGameState('locket_photo', updatedData);
   };
 
-  const currentPhoto = locketData.current;
-  const isSentByMe = currentPhoto?.senderRole === myRole;
+  // TRẢ LỜI ẢNH LOCKET -> NHẢY VÀO HỘP TIN NHẮN REALTIME
+  const handleReplyPhoto = async (e) => {
+    e.preventDefault();
+    if (!replyInput.trim() || !activePhoto) return;
+
+    setIsReplying(true);
+    const myDisplayName = myRole === 'boy' ? boyName : girlName;
+    const myAvatar = myRole === 'boy' 
+      ? (coupleData.boy.avatar || '/images/avatar-boy.svg') 
+      : (coupleData.girl.avatar || '/images/avatar-girl.svg');
+
+    const replyMsg = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      senderRole: myRole,
+      senderName: myDisplayName,
+      senderAvatar: myAvatar,
+      text: `📸 [Trả lời ảnh Locket${activePhoto.caption ? `: "${activePhoto.caption}"` : ''}]\n${replyInput.trim()}`,
+      mediaUrl: activePhoto.image || '',
+      timestamp: Date.now(),
+      reactions: {},
+    };
+
+    try {
+      // 1. Đẩy vào tin nhắn
+      await syncSendMessage(replyMsg);
+
+      // 2. Âm báo & rung
+      playNotificationChime();
+      confetti({
+        particleCount: 30,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ['#f43f5e', '#ec4899', '#fb7185'],
+      });
+
+      // 3. Mở khung chat ngay lập tức
+      window.dispatchEvent(new CustomEvent('open_couple_chat'));
+      setReplyInput('');
+    } catch (err) {
+      console.error('Lỗi gửi tin nhắn trả lời Locket:', err);
+    } finally {
+      setIsReplying(false);
+    }
+  };
+
+  const isSentByMe = activePhoto?.senderRole === myRole;
+  const currentPhotoReactions = activePhoto?.reactions || {};
 
   return (
     <div className="w-full max-w-xl mx-auto my-4 sm:my-6">
@@ -251,67 +378,108 @@ export default function LivePhotoWidget() {
             </div>
           </div>
 
-          {/* Nút Xem Lịch Sử */}
-          {locketData.history?.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowHistoryModal(true)}
-              className="text-[11px] font-medium text-slate-500 hover:text-rose-600 flex items-center gap-1 transition px-2.5 py-1 rounded-full bg-white/80 border border-rose-100 hover:bg-rose-50"
-            >
-              <History className="w-3 h-3 text-rose-500" />
-              <span>Nhật ký ({locketData.history.length})</span>
-            </button>
-          )}
+          <div className="flex items-center gap-1.5">
+            {/* Bộ đếm vị trí ảnh */}
+            {allPhotos.length > 1 && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100/80 text-rose-600">
+                {safeIndex + 1}/{allPhotos.length}
+              </span>
+            )}
+
+            {/* Nút Xem Lịch Sử */}
+            {allPhotos.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowHistoryModal(true)}
+                className="text-[11px] font-medium text-slate-500 hover:text-rose-600 flex items-center gap-1 transition px-2.5 py-1 rounded-full bg-white/80 border border-rose-100 hover:bg-rose-50"
+              >
+                <History className="w-3 h-3 text-rose-500" />
+                <span className="hidden xs:inline">Nhật ký</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* KHUNG HIỂN THỊ ẢNH LOCKET (PHOTO DISPLAY) */}
-        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden aspect-4/3 sm:aspect-square bg-gradient-to-br from-slate-900 via-slate-800 to-zinc-900 shadow-md group">
-          
-          {currentPhoto ? (
+        {/* KHUNG HIỂN THỊ ẢNH LOCKET (VUỐT TRÁI / PHẢI) */}
+        <div 
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="relative rounded-2xl sm:rounded-3xl overflow-hidden aspect-4/3 sm:aspect-square bg-gradient-to-br from-slate-900 via-slate-800 to-zinc-900 shadow-md group select-none"
+        >
+          {activePhoto ? (
             <>
               {/* Ảnh Locket */}
               <img
-                src={currentPhoto.image}
-                alt={currentPhoto.caption || 'Locket photo'}
+                src={activePhoto.image}
+                alt={activePhoto.caption || 'Locket photo'}
                 onClick={() => setShowZoomModal(true)}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102 cursor-pointer"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-101 cursor-pointer"
               />
 
               {/* Tag Người Gửi (Top-Left) */}
               <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold border border-white/20 shadow-md">
-                <span>{currentPhoto.senderRole === 'boy' ? '👑' : '🎀'}</span>
-                <span>{currentPhoto.senderName}</span>
+                <span>{activePhoto.senderRole === 'boy' ? '👑' : '🎀'}</span>
+                <span>{activePhoto.senderName}</span>
                 {isSentByMe && <span className="text-[9px] text-rose-300">(Bạn)</span>}
               </div>
 
               {/* Tag Thời Gian (Top-Right) */}
               <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white/90 text-[10px] font-medium border border-white/20 shadow-md">
                 <Clock className="w-3 h-3 text-amber-300" />
-                <span>{timeAgo(currentPhoto.timestamp)}</span>
+                <span>{timeAgo(activePhoto.timestamp)}</span>
               </div>
 
-              {/* Overlay Chú Thích & Nút Thả Tim (Bottom) */}
+              {/* Nút Điều Hướng Trái / Phải Trên Ảnh */}
+              {safeIndex > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-md text-white flex items-center justify-center transition shadow-lg active:scale-90"
+                  title="Xem ảnh mới hơn (Vuốt sang phải)"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+              )}
+
+              {safeIndex < allPhotos.length - 1 && (
+                <button
+                  type="button"
+                  onClick={() => setCurrentIndex((prev) => Math.min(allPhotos.length - 1, prev + 1))}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/50 hover:bg-black/80 backdrop-blur-md text-white flex items-center justify-center transition shadow-lg active:scale-90"
+                  title="Xem ảnh cũ hơn (Vuốt sang trái)"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Overlay Chú Thích & Huy Hiệu Cảm Xúc (Bottom) */}
               <div className="absolute bottom-0 inset-x-0 p-3 sm:p-4 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex items-end justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  {currentPhoto.caption ? (
+                  {activePhoto.caption ? (
                     <div className="inline-block max-w-full px-3 py-1 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 text-white font-serif font-medium text-xs sm:text-sm shadow-md truncate">
-                      "{currentPhoto.caption}"
+                      "{activePhoto.caption}"
                     </div>
                   ) : (
-                    <span className="text-[10px] text-white/70 italic">Khoảnh khắc vừa gửi</span>
+                    <span className="text-[10px] text-white/70 italic">Khoảnh khắc đôi ta</span>
                   )}
                 </div>
 
-                {/* Nút Thả Tim Phản Hồi */}
-                <button
-                  type="button"
-                  onClick={handleReactHeart}
-                  className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full bg-rose-500/90 hover:bg-rose-500 text-white text-xs font-bold shadow-lg transition active:scale-90 hover:scale-105 border border-white/30"
-                  title="Thả tim cho bức ảnh này"
-                >
-                  <Heart className="w-3.5 h-3.5 fill-white animate-pulse" />
-                  <span>{currentPhoto.reactions || 1}</span>
-                </button>
+                {/* Huy hiệu cảm xúc hai người đã thả */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {currentPhotoReactions.boy && (
+                    <span className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/25 text-white text-[11px] shadow-sm flex items-center gap-1" title={`${boyName} đã thả ${currentPhotoReactions.boy}`}>
+                      <span>👑</span>
+                      <span>{currentPhotoReactions.boy}</span>
+                    </span>
+                  )}
+                  {currentPhotoReactions.girl && (
+                    <span className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/25 text-white text-[11px] shadow-sm flex items-center gap-1" title={`${girlName} đã thả ${currentPhotoReactions.girl}`}>
+                      <span>🎀</span>
+                      <span>{currentPhotoReactions.girl}</span>
+                    </span>
+                  )}
+                </div>
               </div>
             </>
           ) : (
@@ -334,13 +502,80 @@ export default function LivePhotoWidget() {
               </span>
             </div>
           )}
-
         </div>
 
-        {/* Action Bar Nút Bấm */}
-        <div className="mt-3.5 flex items-center justify-between gap-2">
-          
-          {/* Nút mở Camera / Thư viện */}
+        {/* BẬT MÍ VUỐT XEM ẢNH */}
+        {allPhotos.length > 1 && (
+          <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 px-1">
+            <span>👈 Vuốt trái / phải để xem {allPhotos.length} ảnh 👉</span>
+            <div className="flex gap-1">
+              {allPhotos.slice(0, 8).map((_, i) => (
+                <span
+                  key={i}
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    i === safeIndex ? 'bg-rose-500 w-3' : 'bg-slate-200'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* KHU VỰC THẢ CẢM XÚC (EMOJI REACTION BAR) */}
+        {activePhoto && (
+          <div className="mt-3 p-2 rounded-2xl bg-white/90 border border-rose-100 shadow-2xs flex items-center justify-between gap-1">
+            <span className="text-[11px] font-semibold text-slate-500 pl-1 shrink-0">Thả cảm xúc:</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {reactionEmojis.map(({ emoji, label }) => {
+                const isSelectedByMe = currentPhotoReactions[myRole] === emoji;
+                return (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => handleReactEmoji(emoji)}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-lg transition-transform active:scale-125 hover:scale-115 ${
+                      isSelectedByMe 
+                        ? 'bg-rose-100 ring-2 ring-rose-400 scale-110 shadow-xs' 
+                        : 'hover:bg-rose-50'
+                    }`}
+                    title={label}
+                  >
+                    <span>{emoji}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* KHU VỰC TRẢ LỜI ẢNH -> NHẢY VÀO TIN NHẮN REALTIME */}
+        {activePhoto && (
+          <form onSubmit={handleReplyPhoto} className="mt-2.5 flex items-center gap-1.5">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={replyInput}
+                onChange={(e) => setReplyInput(e.target.value)}
+                placeholder={`Nhắn lại cho ${activePhoto.senderRole === myRole ? 'người ấy' : activePhoto.senderName}...`}
+                className="w-full py-2 pl-3.5 pr-8 rounded-full bg-rose-50/70 border border-rose-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition"
+              />
+              <MessageCircle className="w-3.5 h-3.5 text-rose-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!replyInput.trim() || isReplying}
+              className="px-3.5 py-2 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white text-xs font-bold shadow-md transition disabled:opacity-40 flex items-center gap-1 active:scale-95 shrink-0"
+              title="Gửi câu trả lời vào khung chat của hai bạn"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span className="hidden xs:inline">Chat</span>
+            </button>
+          </form>
+        )}
+
+        {/* NÚT CHỤP / GỬI ẢNH MỚI */}
+        <div className="mt-3 pt-2.5 border-t border-rose-100 flex items-center gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -359,7 +594,7 @@ export default function LivePhotoWidget() {
             <span>Chụp / Gửi ảnh Locket mới 📸</span>
           </button>
 
-          {currentPhoto && (
+          {activePhoto && (
             <button
               type="button"
               onClick={() => setShowZoomModal(true)}
@@ -369,7 +604,6 @@ export default function LivePhotoWidget() {
               <Maximize2 className="w-4 h-4" />
             </button>
           )}
-
         </div>
 
       </div>
@@ -404,29 +638,12 @@ export default function LivePhotoWidget() {
               />
             </div>
 
-            {/* Vai trò người gửi */}
-            <div className="flex items-center justify-between text-xs">
+            {/* Thông báo người gửi theo vai trò trên Header */}
+            <div className="flex items-center justify-between text-xs px-1">
               <span className="text-slate-500 font-medium">Người gửi:</span>
-              <div className="flex gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setMyRole('boy')}
-                  className={`px-2.5 py-1 rounded-full font-bold transition text-xs ${
-                    myRole === 'boy' ? 'bg-rose-500 text-white shadow-xs' : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  👑 {boyName}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMyRole('girl')}
-                  className={`px-2.5 py-1 rounded-full font-bold transition text-xs ${
-                    myRole === 'girl' ? 'bg-pink-500 text-white shadow-xs' : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  🎀 {girlName}
-                </button>
-              </div>
+              <span className="font-bold text-rose-600">
+                {myRole === 'boy' ? `👑 ${boyName}` : `🎀 ${girlName}`}
+              </span>
             </div>
 
             {/* Ô nhập Caption */}
@@ -480,7 +697,7 @@ export default function LivePhotoWidget() {
       )}
 
       {/* MODAL PHÓNG TO ẢNH LOCKET HIỆN TẠI */}
-      {showZoomModal && currentPhoto && (
+      {showZoomModal && activePhoto && (
         <div 
           onClick={() => setShowZoomModal(false)}
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md animate-in fade-in cursor-zoom-out"
@@ -491,8 +708,8 @@ export default function LivePhotoWidget() {
           >
             <div className="relative aspect-square">
               <img
-                src={currentPhoto.image}
-                alt={currentPhoto.caption || 'Enlarged photo'}
+                src={activePhoto.image}
+                alt={activePhoto.caption || 'Enlarged photo'}
                 className="w-full h-full object-cover"
               />
               <button
@@ -505,12 +722,12 @@ export default function LivePhotoWidget() {
             </div>
             <div className="p-4 space-y-1 bg-slate-900 text-left">
               <div className="flex items-center justify-between text-xs text-white/70">
-                <span>{currentPhoto.senderName} ({currentPhoto.senderRole === 'boy' ? '👑 Chàng trai' : '🎀 Cô gái'})</span>
-                <span>{timeAgo(currentPhoto.timestamp)}</span>
+                <span>{activePhoto.senderName} ({activePhoto.senderRole === 'boy' ? '👑 Chàng trai' : '🎀 Cô gái'})</span>
+                <span>{timeAgo(activePhoto.timestamp)}</span>
               </div>
-              {currentPhoto.caption && (
+              {activePhoto.caption && (
                 <p className="font-serif text-sm sm:text-base text-white pt-1">
-                  "{currentPhoto.caption}"
+                  "{activePhoto.caption}"
                 </p>
               )}
             </div>
@@ -541,25 +758,29 @@ export default function LivePhotoWidget() {
 
             {/* Danh sách ảnh lưới */}
             <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {[currentPhoto, ...(locketData.history || [])]
-                .filter(Boolean)
-                .map((item, idx) => (
-                  <div
-                    key={item.id || idx}
-                    className="group relative rounded-2xl overflow-hidden aspect-square bg-slate-100 border border-rose-100 shadow-2xs"
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.caption || 'History item'}
-                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition p-2 flex flex-col justify-end text-white text-[10px]">
-                      <span className="font-semibold">{item.senderName}</span>
-                      {item.caption && <span className="truncate italic">"{item.caption}"</span>}
-                      <span className="text-white/70 text-[9px]">{timeAgo(item.timestamp)}</span>
-                    </div>
+              {allPhotos.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  onClick={() => {
+                    setCurrentIndex(idx);
+                    setShowHistoryModal(false);
+                  }}
+                  className={`group relative rounded-2xl overflow-hidden aspect-square bg-slate-100 border cursor-pointer transition-all ${
+                    idx === safeIndex ? 'ring-2 ring-rose-500 border-rose-300' : 'border-rose-100'
+                  }`}
+                >
+                  <img
+                    src={item.image}
+                    alt={item.caption || 'History item'}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition p-2 flex flex-col justify-end text-white text-[10px]">
+                    <span className="font-semibold">{item.senderName}</span>
+                    {item.caption && <span className="truncate italic">"{item.caption}"</span>}
+                    <span className="text-white/70 text-[9px]">{timeAgo(item.timestamp)}</span>
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
 
             <div className="pt-2 text-center">
