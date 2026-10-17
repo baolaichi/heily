@@ -4,30 +4,30 @@ import gsap from 'gsap';
 import confetti from 'canvas-confetti';
 import {
   Sparkles, Heart, RotateCcw, Plus, X, Maximize2, Minimize2,
-  Send, Compass, Stars, ArrowRight, Volume2, VolumeX, Eye
+  Send, Compass, Stars, ArrowRight, Volume2, VolumeX, Lock, KeyRound
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 
 // Danh sách ảnh của bạn đặt trong thư mục public/img kèm các từ khen ngợi dễ thương
 const DEFAULT_PHOTOS = [
   {
-    url: "dist/img/photo1.jpg",
+    url: "/img/photo1.jpg",
     caption: "Xinh đẹp ✨"
   },
   {
-    url: "dist/img/photo2.jpg",
+    url: "/img/photo2.jpg",
     caption: "Đặc biệt 💕"
   },
   {
-    url: "dist/img/photo3.jpg",
+    url: "/img/photo3.jpg",
     caption: "Rấc iu 🥰"
   },
   {
-    url: "dist/img/photo4.jpg",
+    url: "/img/photo4.jpg",
     caption: "Rạng rỡ 🌸"
   },
   {
-    url: "dist/img/photo5.jpg",
+    url: "/img/photo5.jpg",
     caption: "Dịu dàng 🌷"
   }
 ];
@@ -109,6 +109,10 @@ const sfx = new SoundFX();
 export default function CosmicMultiverse({ onBackToHome }) {
   const { coupleData, myRole } = useCouple();
 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passInput, setPassInput] = useState('');
+  const [passError, setPassError] = useState(false);
+
   const [stage, setStage] = useState(1);
   const [isLetterOpened, setIsLetterOpened] = useState(false);
   const [isBouquetBloomed, setIsBouquetBloomed] = useState(false);
@@ -150,6 +154,25 @@ export default function CosmicMultiverse({ onBackToHome }) {
     mouse: new THREE.Vector2(),
   });
 
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    if (passInput === '080206') {
+      sfx.playChimes();
+      setIsAuthenticated(true);
+      setPassError(false);
+      confetti({
+        particleCount: 70,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#f43f5e', '#ec4899', '#ffd166']
+      });
+    } else {
+      sfx.playPop();
+      setPassError(true);
+      setPassInput('');
+    }
+  };
+
   const toggleSound = () => {
     sfx.isMuted = !isMuted;
     setIsMuted(!isMuted);
@@ -160,7 +183,6 @@ export default function CosmicMultiverse({ onBackToHome }) {
   const letterToName = myRole === 'girl' ? boyName : girlName;
   const letterFromName = myRole === 'girl' ? girlName : boyName;
 
-  // Mở thư
   const handleOpenEnvelope = () => {
     if (isLetterOpened) return;
     sfx.playPop();
@@ -196,7 +218,6 @@ export default function CosmicMultiverse({ onBackToHome }) {
     }, 5000);
   };
 
-  // Bó hoa nhô lên từ vòng tròn
   const handleBouquetClick = () => {
     if (stage !== 2) return;
 
@@ -269,7 +290,7 @@ export default function CosmicMultiverse({ onBackToHome }) {
   };
 
   useEffect(() => {
-    if (stage !== 3 || !canvasRef.current || !containerRef.current) return;
+    if (!isAuthenticated || stage !== 3 || !canvasRef.current || !containerRef.current) return;
 
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -355,7 +376,6 @@ export default function CosmicMultiverse({ onBackToHome }) {
     const starField = new THREE.Points(starGeo, starMat);
     universeGroup.add(starField);
 
-    // Floating Photos (Vũ trụ 360 độ)
     DEFAULT_PHOTOS.forEach((photoData, idx) => {
       const pCanvas = document.createElement('canvas');
       pCanvas.width = 512;
@@ -404,7 +424,6 @@ export default function CosmicMultiverse({ onBackToHome }) {
       universeGroup.add(mesh);
     });
 
-    // Floating Wishes
     const wishesToRender = allWishes;
     wishesToRender.forEach((wishText, idx) => {
       const wCanvas = document.createElement('canvas');
@@ -477,7 +496,6 @@ export default function CosmicMultiverse({ onBackToHome }) {
       universeGroup.add(mesh);
     });
 
-    // Petals falling
     const petalShape = new THREE.Shape();
     petalShape.moveTo(0, 0);
     petalShape.bezierCurveTo(6, 10, 10, 18, 0, 26);
@@ -645,7 +663,7 @@ export default function CosmicMultiverse({ onBackToHome }) {
       }
       renderer.dispose();
     };
-  }, [stage, allWishes.length]);
+  }, [isAuthenticated, stage, allWishes.length]);
 
   const handleBurstMultiverse = () => {
     sfx.playChimes();
@@ -695,344 +713,400 @@ export default function CosmicMultiverse({ onBackToHome }) {
     <div
       ref={containerRef}
       className={`relative w-full overflow-hidden select-none transition-all duration-300 rounded-2xl sm:rounded-3xl ${isActualFullscreen
-        ? 'fixed inset-0 z-50 bg-[#090207] min-h-[100dvh] w-screen h-[100dvh]'
-        : 'h-[calc(100vh-140px)] sm:h-[480px] max-h-[520px] min-h-[350px] bg-gradient-to-b from-[#200517] via-[#12020e] to-[#080106] border border-pink-500/35 shadow-2xl my-1'
+          ? 'fixed inset-0 z-50 bg-[#090207] min-h-[100dvh] w-screen h-[100dvh]'
+          : 'h-[calc(100vh-140px)] sm:h-[480px] max-h-[520px] min-h-[350px] bg-gradient-to-b from-[#200517] via-[#12020e] to-[#080106] border border-pink-500/35 shadow-2xl my-1'
         }`}
       style={{
         background: 'radial-gradient(circle at center, #2e0921 0%, #150310 50%, #080106 100%)'
       }}
     >
-      <canvas
-        ref={canvasRef}
-        className={`absolute inset-0 w-full h-full z-10 cursor-grab active:cursor-grabbing ${stage === 3 ? 'block' : 'hidden'
-          }`}
-      />
-
-      {/* Top Header / Bar */}
-      <div className="absolute top-0 left-0 right-0 z-40 px-3 py-1.5 flex items-center justify-between pointer-events-auto">
-        <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-pink-400/40 flex items-center justify-center bg-pink-950/60 backdrop-blur-md shadow-lg text-pink-300">
-            <Sparkles className="w-3 h-3 text-pink-300" />
-          </div>
-          <div>
-            <h2 className="text-[9px] sm:text-[11px] tracking-[0.15em] uppercase text-pink-200 font-cinzel font-bold">
-              Vũ Trụ Lời Chúc 20/10
-            </h2>
-            <p className="text-[7px] sm:text-[8px] text-pink-300/70 tracking-wider">
-              {stage === 1 ? 'Chương I: Lá Thư' : stage === 2 ? 'Chương II: Bó Hoa' : 'Chương III: 360°'}
-            </p>
-          </div>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={toggleSound}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-pink-950/60 border border-pink-400/30 hover:bg-white/15 transition shadow-lg text-[9px] sm:text-xs text-pink-200 cursor-pointer"
-            title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
-          >
-            {isMuted ? <VolumeX className="w-2.5 h-2.5 text-pink-400" /> : <Volume2 className="w-2.5 h-2.5 text-yellow-300 animate-pulse" />}
-            <span className="hidden sm:inline">{isMuted ? 'Tắt' : 'Bật'}</span>
-          </button>
-
-          <button
-            onClick={() => setIsFullscreen(!isActualFullscreen)}
-            className="p-1 rounded-full bg-pink-950/60 border border-pink-400/30 hover:bg-white/15 transition shadow-lg text-pink-200 cursor-pointer"
-            title={isActualFullscreen ? 'Thu nhỏ' : 'Toàn màn hình'}
-          >
-            {isActualFullscreen ? <Minimize2 className="w-2.5 h-2.5 text-pink-300" /> : <Maximize2 className="w-2.5 h-2.5 text-pink-300" />}
-          </button>
-
-          {onBackToHome && (
-            <button
-              onClick={() => {
-                setIsFullscreen(false);
-                onBackToHome();
-              }}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white border border-rose-300/60 shadow-lg text-[9px] sm:text-xs font-semibold transition active:scale-95 cursor-pointer"
-              title="Thoát khỏi trang"
-            >
-              <X className="w-2.5 h-2.5" />
-              <span>Thoát</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* STAGE 1: ENVELOPE */}
-      {stage === 1 && (
-        <div className="relative z-30 flex flex-col items-center justify-center h-full px-2 pt-6 pb-2 animate-in fade-in duration-700">
-          <div className="text-center mb-1">
-            <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.15em] text-pink-300 font-cinzel">
-              Mừng Ngày Phụ Nữ Việt Nam 20/10
-            </span>
-            <h3 className="text-sm sm:text-xl font-serif-title italic gold-glow text-pink-100 mt-0.5">
-              Gửi {letterToName} Yêu Thương
-            </h3>
-            <p className="text-[8px] sm:text-[10px] text-pink-200/80">
-              Chúc em ngày 20/10 thật nhiều niềm vui, luôn rạng rỡ và luôn bình yên nhé! 💕
-            </p>
-          </div>
-
-          <div
-            onClick={handleOpenEnvelope}
-            className="envelope-wrapper my-1 animate-float cursor-pointer hover:scale-105 transition-transform scale-[0.65] sm:scale-80"
-          >
-            <div className="cosmic-envelope" id="cosmicEnvelope">
-              <div className="flap" id="cosmicFlap"></div>
-              <div className="cosmic-wax-seal" id="cosmicWaxSeal">
-                <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-200 fill-current animate-pulse" />
-              </div>
-              <div className="pocket"></div>
-              <div className="cosmic-letter flex flex-col justify-between" id="cosmicLetter">
-                <div>
-                  <div className="flex items-center justify-between border-b border-pink-200/50 pb-0.5 mb-0.5">
-                    <span className="text-[8px] sm:text-[10px] tracking-widest text-pink-800 font-cinzel uppercase font-semibold">
-                      Gửi {letterToName}
-                    </span>
-                    <span className="text-[8px] sm:text-[10px] text-pink-600 font-serif italic">
-                      From {letterFromName}
-                    </span>
-                  </div>
-                  <p className="font-handwriting text-xs sm:text-base text-pink-950 font-bold leading-snug">
-                    "Chúc mừng 20/10 Thúy Hương của anh! Cảm ơn em vì đã luôn đồng hành, mang lại nụ cười và sự bình yên mỗi ngày. Mong mọi điều tuyệt vời nhất luôn đến với em..."
-                  </p>
-                </div>
-                <div className="text-right text-[8px] sm:text-[10px] text-pink-700 italic font-medium flex items-center justify-end gap-1">
-                  <span>
-                    {isLetterOpened ? "Đang chuyển chương II..." : "Chạm để đọc lá thư"}
-                  </span>
-                  <ArrowRight className="w-2.5 h-2.5 inline ml-0.5" />
-                </div>
-              </div>
+      {/* MÀN HÌNH NHẬP MẬT KHẨU */}
+      {!isAuthenticated && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center p-4 bg-[#12020e]/95 backdrop-blur-md animate-in fade-in duration-500">
+          <div className="w-full max-w-xs bg-gradient-to-b from-[#2b0c20] to-[#150310] border border-pink-400/40 rounded-3xl p-6 shadow-2xl text-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-pink-950/80 border border-pink-400/50 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(244,63,94,0.5)]">
+              <Lock className="w-6 h-6 text-pink-300 animate-pulse" />
             </div>
-          </div>
 
-          <button
-            onClick={() => {
-              if (isLetterOpened) setStage(2);
-              else handleOpenEnvelope();
-            }}
-            className="mt-1 flex items-center gap-1 text-pink-300 text-[8px] sm:text-[11px] bg-pink-950/50 px-3 py-1 rounded-full border border-pink-400/30 backdrop-blur-md hover:bg-pink-900/60 transition cursor-pointer"
-          >
-            <Sparkles className="w-2.5 h-2.5 text-yellow-300 animate-spin" />
-            <span>{isLetterOpened ? "Sang Chương II (Bó Hoa) ngay" : "Chạm vào phong bì để mở thư"}</span>
-          </button>
+            <h3 className="text-sm sm:text-base font-serif-title font-bold text-pink-100 mb-1">
+              Không Gian Bí Mật 💌
+            </h3>
+            <p className="text-[10px] sm:text-xs text-pink-300/80 mb-4">
+              Vui lòng nhập mã khóa để mở không gian yêu thương của chúng ta nhé!
+            </p>
+
+            <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3">
+              <div className="relative">
+                <input
+                  type="password"
+                  value={passInput}
+                  onChange={(e) => setPassInput(e.target.value)}
+                  placeholder="Nhập mã khóa (ví dụ: ******)"
+                  maxLength={6}
+                  autoFocus
+                  className="w-full bg-pink-950/60 border border-pink-400/40 rounded-xl px-3 py-2 text-center tracking-widest text-pink-100 text-sm placeholder-pink-400/40 focus:outline-none focus:border-pink-300 transition"
+                  required
+                />
+              </div>
+
+              {passError && (
+                <p className="text-[10px] text-rose-400 font-medium animate-bounce">
+                  ❌ Mật khẩu chưa đúng, thử lại nha!
+                </p>
+              )}
+
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs font-semibold shadow-lg transition active:scale-95 cursor-pointer border border-pink-300/40"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-yellow-200" />
+                <span>Mở Khóa Không Gian</span>
+              </button>
+            </form>
+
+            {onBackToHome && (
+              <button
+                onClick={onBackToHome}
+                className="mt-3 text-[10px] text-pink-300/70 hover:text-pink-200 transition underline cursor-pointer"
+              >
+                Quay lại trang chủ
+              </button>
+            )}
+          </div>
         </div>
       )}
 
-      {/* STAGE 2: BOUQUET SPROUTING FROM MAGIC CIRCLE */}
-      {stage === 2 && (
-        <div className="relative z-30 flex flex-col items-center justify-center h-full px-2 pt-6 pb-2 animate-in fade-in duration-700">
-          <div className="text-center mb-1">
-            <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.15em] text-pink-300 font-cinzel">
-              Chương II: Bó Hoa Kỷ Niệm 20/10
-            </span>
-            <h3 className="text-sm sm:text-xl font-serif-title italic gold-glow text-pink-100 mt-0.5">
-              {!isBouquetBloomed ? "Chạm Vòng Tròn Để Nở Bó Hoa" : "Bó Hoa Đang Nở Rạng Rỡ ✨"}
-            </h3>
-            <p className="text-[8px] sm:text-[10px] text-pink-200/80">
-              Chạm vào vòng tròn ma thuật để bó hoa tươi thắm nhô lên cùng các bức hình kỷ niệm! 💐
-            </p>
-          </div>
+      {/* NỘI DUNG CHÍNH SAU KHI ĐÃ NHẬP ĐÚNG PASS */}
+      {isAuthenticated && (
+        <>
+          <canvas
+            ref={canvasRef}
+            className={`absolute inset-0 w-full h-full z-10 cursor-grab active:cursor-grabbing ${stage === 3 ? 'block' : 'hidden'
+              }`}
+          />
 
-          <div className="relative w-52 h-52 sm:w-68 sm:h-68 flex items-center justify-center my-1">
-            {/* Các ảnh từ public/img kèm từ khen ngợi bung ra bọc quanh bó hoa */}
-            {DEFAULT_PHOTOS.slice(0, 4).map((p, idx) => (
-              <div
-                key={idx}
-                id={`sprout-polaroid-${idx}`}
-                onClick={() => {
-                  sfx.playPop();
-                  setActiveModalItem({ type: 'photo', data: p });
-                }}
-                className="absolute w-20 sm:w-26 bg-white p-1 rounded-lg shadow-2xl border-2 border-pink-300 cursor-pointer hover:scale-110 transition-transform opacity-0 pointer-events-none z-30"
-                style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%) scale(0.2)' }}
-              >
-                <div className="aspect-square bg-pink-950 overflow-hidden rounded-md mb-1">
-                  <img src={p.url} alt="" className="w-full h-full object-cover" />
-                </div>
-                <p className="text-[9px] text-pink-950 font-bold text-center truncate font-sans">
-                  {p.caption}
+          {/* Top Header / Bar */}
+          <div className="absolute top-0 left-0 right-0 z-40 px-3 py-1.5 flex items-center justify-between pointer-events-auto">
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-pink-400/40 flex items-center justify-center bg-pink-950/60 backdrop-blur-md shadow-lg text-pink-300">
+                <Sparkles className="w-3 h-3 text-pink-300" />
+              </div>
+              <div>
+                <h2 className="text-[9px] sm:text-[11px] tracking-[0.15em] uppercase text-pink-200 font-cinzel font-bold">
+                  Vũ Trụ Lời Chúc 20/10
+                </h2>
+                <p className="text-[7px] sm:text-[8px] text-pink-300/70 tracking-wider">
+                  {stage === 1 ? 'Chương I: Lá Thư' : stage === 2 ? 'Chương II: Bó Hoa' : 'Chương III: 360°'}
                 </p>
               </div>
-            ))}
+            </div>
 
-            {/* Vòng tròn ban đầu -> Chạm để bó hoa trồi lên */}
-            <div
-              onClick={handleBouquetClick}
-              className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-tr from-rose-600 via-pink-500 to-amber-300 p-2 shadow-[0_0_40px_rgba(244,63,94,0.7)] cursor-pointer animate-pulse hover:scale-105 transition-transform z-20 flex items-center justify-center border-2 border-white/60"
-            >
-              <div className="w-full h-full rounded-full bg-gradient-to-b from-[#250618] to-[#12020e] flex flex-col items-center justify-center p-2 text-center border border-pink-400/40">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={toggleSound}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-pink-950/60 border border-pink-400/30 hover:bg-white/15 transition shadow-lg text-[9px] sm:text-xs text-pink-200 cursor-pointer"
+                title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
+              >
+                {isMuted ? <VolumeX className="w-2.5 h-2.5 text-pink-400" /> : <Volume2 className="w-2.5 h-2.5 text-yellow-300 animate-pulse" />}
+                <span className="hidden sm:inline">{isMuted ? 'Tắt' : 'Bật'}</span>
+              </button>
+
+              <button
+                onClick={() => setIsFullscreen(!isActualFullscreen)}
+                className="p-1 rounded-full bg-pink-950/60 border border-pink-400/30 hover:bg-white/15 transition shadow-lg text-pink-200 cursor-pointer"
+                title={isActualFullscreen ? 'Thu nhỏ' : 'Toàn màn hình'}
+              >
+                {isActualFullscreen ? <Minimize2 className="w-2.5 h-2.5 text-pink-300" /> : <Maximize2 className="w-2.5 h-2.5 text-pink-300" />}
+              </button>
+
+              {onBackToHome && (
+                <button
+                  onClick={() => {
+                    setIsFullscreen(false);
+                    onBackToHome();
+                  }}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white border border-rose-300/60 shadow-lg text-[9px] sm:text-xs font-semibold transition active:scale-95 cursor-pointer"
+                  title="Thoát khỏi trang"
+                >
+                  <X className="w-2.5 h-2.5" />
+                  <span>Thoát</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* STAGE 1: ENVELOPE */}
+          {stage === 1 && (
+            <div className="relative z-30 flex flex-col items-center justify-center h-full px-2 pt-6 pb-2 animate-in fade-in duration-700">
+              <div className="text-center mb-1">
+                <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.15em] text-pink-300 font-cinzel">
+                  Mừng Ngày Phụ Nữ Việt Nam 20/10
+                </span>
+                <h3 className="text-sm sm:text-xl font-serif-title italic gold-glow text-pink-100 mt-0.5">
+                  Gửi {letterToName} Yêu Thương
+                </h3>
+                <p className="text-[8px] sm:text-[10px] text-pink-200/80">
+                  Chúc em ngày 20/10 thật nhiều niềm vui, luôn rạng rỡ và luôn bình yên nhé! 💕
+                </p>
+              </div>
+
+              <div
+                onClick={handleOpenEnvelope}
+                className="envelope-wrapper my-1 animate-float cursor-pointer hover:scale-105 transition-transform scale-[0.65] sm:scale-80"
+              >
+                <div className="cosmic-envelope" id="cosmicEnvelope">
+                  <div className="flap" id="cosmicFlap"></div>
+                  <div className="cosmic-wax-seal" id="cosmicWaxSeal">
+                    <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-200 fill-current animate-pulse" />
+                  </div>
+                  <div className="pocket"></div>
+                  <div className="cosmic-letter flex flex-col justify-between" id="cosmicLetter">
+                    <div>
+                      <div className="flex items-center justify-between border-b border-pink-200/50 pb-0.5 mb-0.5">
+                        <span className="text-[8px] sm:text-[10px] tracking-widest text-pink-800 font-cinzel uppercase font-semibold">
+                          Gửi {letterToName}
+                        </span>
+                        <span className="text-[8px] sm:text-[10px] text-pink-600 font-serif italic">
+                          From {letterFromName}
+                        </span>
+                      </div>
+                      <p className="font-handwriting text-xs sm:text-base text-pink-950 font-bold leading-snug">
+                        "Chúc mừng 20/10 Thúy Hương của anh! Cảm ơn em vì đã luôn đồng hành, mang lại nụ cười và sự bình yên mỗi ngày. Mong mọi điều tuyệt vời nhất luôn đến với em..."
+                      </p>
+                    </div>
+                    <div className="text-right text-[8px] sm:text-[10px] text-pink-700 italic font-medium flex items-center justify-end gap-1">
+                      <span>
+                        {isLetterOpened ? "Đang chuyển chương II..." : "Chạm để đọc lá thư"}
+                      </span>
+                      <ArrowRight className="w-2.5 h-2.5 inline ml-0.5" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (isLetterOpened) setStage(2);
+                  else handleOpenEnvelope();
+                }}
+                className="mt-1 flex items-center gap-1 text-pink-300 text-[8px] sm:text-[11px] bg-pink-950/50 px-3 py-1 rounded-full border border-pink-400/30 backdrop-blur-md hover:bg-pink-900/60 transition cursor-pointer"
+              >
+                <Sparkles className="w-2.5 h-2.5 text-yellow-300 animate-spin" />
+                <span>{isLetterOpened ? "Sang Chương II (Bó Hoa) ngay" : "Chạm vào phong bì để mở thư"}</span>
+              </button>
+            </div>
+          )}
+
+          {/* STAGE 2: BOUQUET SPROUTING FROM MAGIC CIRCLE */}
+          {stage === 2 && (
+            <div className="relative z-30 flex flex-col items-center justify-center h-full px-2 pt-6 pb-2 animate-in fade-in duration-700">
+              <div className="text-center mb-1">
+                <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.15em] text-pink-300 font-cinzel">
+                  Chương II: Bó Hoa Kỷ Niệm 20/10
+                </span>
+                <h3 className="text-sm sm:text-xl font-serif-title italic gold-glow text-pink-100 mt-0.5">
+                  {!isBouquetBloomed ? "Chạm Vòng Tròn Để Nở Bó Hoa" : "Bó Hoa Đang Nở Rạng Rỡ ✨"}
+                </h3>
+                <p className="text-[8px] sm:text-[10px] text-pink-200/80">
+                  Chạm vào vòng tròn ma thuật để bó hoa tươi thắm nhô lên cùng các bức hình kỷ niệm! 💐
+                </p>
+              </div>
+
+              <div className="relative w-52 h-52 sm:w-68 sm:h-68 flex items-center justify-center my-1">
+                {DEFAULT_PHOTOS.slice(0, 4).map((p, idx) => (
+                  <div
+                    key={idx}
+                    id={`sprout-polaroid-${idx}`}
+                    onClick={() => {
+                      sfx.playPop();
+                      setActiveModalItem({ type: 'photo', data: p });
+                    }}
+                    className="absolute w-20 sm:w-26 bg-white p-1 rounded-lg shadow-2xl border-2 border-pink-300 cursor-pointer hover:scale-110 transition-transform opacity-0 pointer-events-none z-30"
+                    style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%) scale(0.2)' }}
+                  >
+                    <div className="aspect-square bg-pink-950 overflow-hidden rounded-md mb-1">
+                      <img src={p.url} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <p className="text-[9px] text-pink-950 font-bold text-center truncate font-sans">
+                      {p.caption}
+                    </p>
+                  </div>
+                ))}
+
+                <div
+                  onClick={handleBouquetClick}
+                  className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-tr from-rose-600 via-pink-500 to-amber-300 p-2 shadow-[0_0_40px_rgba(244,63,94,0.7)] cursor-pointer animate-pulse hover:scale-105 transition-transform z-20 flex items-center justify-center border-2 border-white/60"
+                >
+                  <div className="w-full h-full rounded-full bg-gradient-to-b from-[#250618] to-[#12020e] flex flex-col items-center justify-center p-2 text-center border border-pink-400/40">
+                    {!isBouquetBloomed ? (
+                      <div className="flex flex-col items-center justify-center">
+                        <Stars className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-300 animate-spin mb-1" />
+                        <span className="text-[8px] sm:text-[10px] text-pink-200 font-cinzel font-bold leading-tight">
+                          Chạm Để Nở Hoa
+                        </span>
+                      </div>
+                    ) : (
+                      <div id="centralBouquetCore" className="flex flex-col items-center justify-center">
+                        <div className="flex items-center justify-center gap-1 mb-0.5">
+                          <span className="text-2xl sm:text-3xl animate-bounce">💐</span>
+                          <Heart className="w-4 h-4 text-pink-400 fill-pink-500 animate-pulse" />
+                        </div>
+                        <span className="text-[8px] sm:text-[10px] text-pink-200 font-cinzel font-bold leading-tight">
+                          Vào Vũ Trụ 3D
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 mt-1">
                 {!isBouquetBloomed ? (
-                  /* Vòng tròn ma thuật ban đầu */
-                  <div className="flex flex-col items-center justify-center">
-                    <Stars className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-300 animate-spin mb-1" />
-                    <span className="text-[8px] sm:text-[10px] text-pink-200 font-cinzel font-bold leading-tight">
-                      Chạm Để Nở Hoa
-                    </span>
+                  <button
+                    onClick={handleBouquetClick}
+                    className="flex items-center gap-1 px-4 py-1 sm:px-5 sm:py-1.5 rounded-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-medium text-[11px] shadow-xl border border-pink-300/40 cursor-pointer"
+                  >
+                    <Sparkles className="w-3 h-3 text-yellow-300" />
+                    <span>Nở Bó Hoa 20/10</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={transitionToMultiverse}
+                    className="flex items-center gap-1 px-4 py-1 sm:px-5 sm:py-1.5 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 hover:opacity-95 text-white font-semibold text-[11px] shadow-2xl border border-yellow-300/60 cursor-pointer animate-pulse"
+                  >
+                    <Compass className="w-3 h-3 text-yellow-200" />
+                    <span>Khám Phá Vũ Trụ Đa Hình Ảnh 360°</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* STAGE 3: UI OVERLAYS FOR 3D MULTIVERSE */}
+          {stage === 3 && (
+            <div className="absolute bottom-2 left-0 right-0 z-30 flex flex-col items-center pointer-events-none px-3">
+              <div className="bg-pink-950/75 backdrop-blur-md border border-pink-400/30 px-3 py-1 rounded-full shadow-2xl flex items-center gap-2 pointer-events-auto">
+                <button
+                  onClick={handleBurstMultiverse}
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white text-[9px] sm:text-xs font-semibold shadow transition cursor-pointer"
+                >
+                  <Sparkles className="w-2.5 h-2.5 text-yellow-300" />
+                  <span>Pháo Hoa ✨</span>
+                </button>
+
+                <button
+                  onClick={() => setIsAddWishModalOpen(true)}
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-600 hover:bg-amber-500 text-white text-[9px] sm:text-xs font-semibold shadow transition cursor-pointer"
+                >
+                  <Plus className="w-2.5 h-2.5" />
+                  <span>Thêm Chúc 💌</span>
+                </button>
+
+                <button
+                  onClick={handleReplay}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-pink-200 text-[9px] sm:text-xs transition cursor-pointer"
+                  title="Xem lại từ đầu"
+                >
+                  <RotateCcw className="w-2.5 h-2.5" />
+                  <span className="hidden sm:inline">Xem Lại</span>
+                </button>
+              </div>
+              <p className="text-[7px] sm:text-[8px] text-pink-300/70 mt-1 text-center drop-shadow">
+                💡 Vuốt xoay 360° • Cuộn phóng to/thu nhỏ • Chạm thẻ xem chi tiết
+              </p>
+            </div>
+          )}
+
+          {/* MODAL: VIEW PHOTO OR WISH DETAIL (ĐÃ SỬA CĂN GIỮA VÀ KHÔNG BỊ LẤP) */}
+          {activeModalItem && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+              <div className="relative w-full max-w-xs max-h-[90vh] overflow-y-auto bg-gradient-to-b from-[#2b0c20] to-[#12020e] border border-pink-400/60 rounded-3xl p-4 shadow-2xl text-center my-auto">
+                <button
+                  onClick={() => setActiveModalItem(null)}
+                  className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-pink-950/90 hover:bg-pink-900 text-pink-200 border border-pink-400/40 transition cursor-pointer shadow-lg"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+
+                {activeModalItem.type === 'photo' ? (
+                  <div className="flex flex-col items-center pt-1">
+                    <div className="w-full bg-white p-2.5 rounded-2xl shadow-2xl border border-pink-200 mb-3 transform rotate-1">
+                      <div className="aspect-square bg-pink-950 rounded-xl overflow-hidden mb-1.5 shadow-inner">
+                        <img src={activeModalItem.data.url} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      <p className="font-sans text-sm sm:text-base text-pink-950 font-bold">
+                        {activeModalItem.data.caption}
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-pink-300 italic px-2">
+                      Khoảnh khắc tuyệt vời trong hành trình của hai đứa 💕
+                    </p>
                   </div>
                 ) : (
-                  /* Bó hoa hồng nhô lên từ vòng tròn */
-                  <div id="centralBouquetCore" className="flex flex-col items-center justify-center">
-                    <div className="flex items-center justify-center gap-1 mb-0.5">
-                      <span className="text-2xl sm:text-3xl animate-bounce">💐</span>
+                  <div className="flex flex-col items-center py-3 px-1">
+                    <div className="w-9 h-9 rounded-full bg-pink-900/60 border border-pink-400/40 flex items-center justify-center mb-2 shadow-lg">
                       <Heart className="w-4 h-4 text-pink-400 fill-pink-500 animate-pulse" />
                     </div>
-                    <span className="text-[8px] sm:text-[10px] text-pink-200 font-cinzel font-bold leading-tight">
-                      Vào Vũ Trụ 3D
-                    </span>
+                    <h4 className="text-[9px] uppercase tracking-[0.2em] text-pink-300 font-cinzel mb-1.5">
+                      Lời Chúc 20/10
+                    </h4>
+                    <p className="text-xs sm:text-sm font-serif text-pink-100 leading-relaxed italic px-2 mb-3">
+                      "{activeModalItem.data}"
+                    </p>
+                    <div className="w-10 h-0.5 bg-gradient-to-r from-transparent via-pink-400 to-transparent"></div>
                   </div>
                 )}
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="flex items-center gap-2 mt-1">
-            {!isBouquetBloomed ? (
-              <button
-                onClick={handleBouquetClick}
-                className="flex items-center gap-1 px-4 py-1 sm:px-5 sm:py-1.5 rounded-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-medium text-[11px] shadow-xl border border-pink-300/40 cursor-pointer"
-              >
-                <Sparkles className="w-3 h-3 text-yellow-300" />
-                <span>Nở Bó Hoa 20/10</span>
-              </button>
-            ) : (
-              <button
-                onClick={transitionToMultiverse}
-                className="flex items-center gap-1 px-4 py-1 sm:px-5 sm:py-1.5 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 hover:opacity-95 text-white font-semibold text-[11px] shadow-2xl border border-yellow-300/60 cursor-pointer animate-pulse"
-              >
-                <Compass className="w-3 h-3 text-yellow-200" />
-                <span>Khám Phá Vũ Trụ Đa Hình Ảnh 360°</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* STAGE 3: UI OVERLAYS FOR 3D MULTIVERSE */}
-      {stage === 3 && (
-        <div className="absolute bottom-2 left-0 right-0 z-30 flex flex-col items-center pointer-events-none px-3">
-          <div className="bg-pink-950/75 backdrop-blur-md border border-pink-400/30 px-3 py-1 rounded-full shadow-2xl flex items-center gap-2 pointer-events-auto">
-            <button
-              onClick={handleBurstMultiverse}
-              className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-pink-600 hover:bg-pink-500 text-white text-[9px] sm:text-xs font-semibold shadow transition cursor-pointer"
-            >
-              <Sparkles className="w-2.5 h-2.5 text-yellow-300" />
-              <span>Pháo Hoa ✨</span>
-            </button>
-
-            <button
-              onClick={() => setIsAddWishModalOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-600 hover:bg-amber-500 text-white text-[9px] sm:text-xs font-semibold shadow transition cursor-pointer"
-            >
-              <Plus className="w-2.5 h-2.5" />
-              <span>Thêm Chúc 💌</span>
-            </button>
-
-            <button
-              onClick={handleReplay}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-pink-200 text-[9px] sm:text-xs transition cursor-pointer"
-              title="Xem lại từ đầu"
-            >
-              <RotateCcw className="w-2.5 h-2.5" />
-              <span className="hidden sm:inline">Xem Lại</span>
-            </button>
-          </div>
-          <p className="text-[7px] sm:text-[8px] text-pink-300/70 mt-1 text-center drop-shadow">
-            💡 Vuốt xoay 360° • Cuộn phóng to/thu nhỏ • Chạm thẻ xem chi tiết
-          </p>
-        </div>
-      )}
-
-      {/* MODAL: VIEW PHOTO OR WISH DETAIL */}
-      {activeModalItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xs bg-gradient-to-b from-[#2b0c20] to-[#12020e] border border-pink-400/50 rounded-2xl p-3.5 shadow-2xl text-center">
-            <button
-              onClick={() => setActiveModalItem(null)}
-              className="absolute top-2.5 right-2.5 p-1 rounded-full bg-pink-950/80 hover:bg-pink-900 text-pink-200 border border-pink-400/35 transition cursor-pointer"
-            >
-              <X className="w-3 h-3" />
-            </button>
-
-            {activeModalItem.type === 'photo' ? (
-              <div className="flex flex-col items-center">
-                <div className="w-full bg-white p-2 rounded-xl shadow-2xl border border-pink-200 mb-2 transform rotate-1">
-                  <div className="aspect-square bg-pink-950 rounded-lg overflow-hidden mb-1">
-                    <img src={activeModalItem.data.url} alt="" className="w-full h-full object-cover" />
+          {/* MODAL: ADD CUSTOM WISH */}
+          {isAddWishModalOpen && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+              <div className="relative w-full max-w-xs bg-gradient-to-b from-[#2b0c20] to-[#12020e] border border-pink-400/60 rounded-3xl p-4 shadow-2xl my-auto">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                    <h3 className="text-xs font-serif-title font-bold text-pink-100">
+                      Thêm Lời Chúc Vào Vũ Trụ
+                    </h3>
                   </div>
-                  <p className="font-sans text-sm sm:text-base text-pink-950 font-bold">
-                    {activeModalItem.data.caption}
-                  </p>
+                  <button
+                    onClick={() => setIsAddWishModalOpen(false)}
+                    className="p-1.5 rounded-full bg-pink-950/90 hover:bg-pink-900 text-pink-200 border border-pink-400/40 transition cursor-pointer shadow-lg"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
-                <p className="text-[9px] text-pink-300 italic">
-                  Khoảnh khắc tuyệt vời trong hành trình của hai đứa 💕
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center py-2">
-                <div className="w-8 h-8 rounded-full bg-pink-900/60 border border-pink-400/40 flex items-center justify-center mb-2">
-                  <Heart className="w-3.5 h-3.5 text-pink-400 fill-pink-500 animate-pulse" />
-                </div>
-                <h4 className="text-[8px] uppercase tracking-[0.2em] text-pink-300 font-cinzel mb-1">
-                  Lời Chúc 20/10
-                </h4>
-                <p className="text-xs sm:text-sm font-serif text-pink-100 leading-relaxed italic px-1 mb-2">
-                  "{activeModalItem.data}"
-                </p>
-                <div className="w-8 h-0.5 bg-gradient-to-r from-transparent via-pink-400 to-transparent"></div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* MODAL: ADD CUSTOM WISH */}
-      {isAddWishModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xs bg-gradient-to-b from-[#2b0c20] to-[#12020e] border border-pink-400/50 rounded-2xl p-3.5 shadow-2xl">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-yellow-300" />
-                <h3 className="text-xs font-serif-title font-bold text-pink-100">
-                  Thêm Lời Chúc Vào Vũ Trụ
-                </h3>
+                <form onSubmit={handleSaveCustomWish}>
+                  <textarea
+                    value={newWishText}
+                    onChange={(e) => setNewWishText(e.target.value)}
+                    placeholder="Nhập lời chúc 20/10 ngọt ngào gửi người yêu..."
+                    rows={3}
+                    className="w-full bg-pink-950/60 border border-pink-400/40 rounded-xl p-2.5 text-pink-100 text-xs placeholder-pink-400/50 focus:outline-none focus:border-pink-400 resize-none mb-2.5"
+                    maxLength={120}
+                    required
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] text-pink-300/70">
+                      {120 - newWishText.length} ký tự
+                    </span>
+                    <button
+                      type="submit"
+                      className="flex items-center gap-1 px-4 py-1.5 rounded-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-[11px] font-semibold shadow-lg transition cursor-pointer"
+                    >
+                      <Send className="w-3 h-3" />
+                      <span>Gửi Vào Vũ Trụ</span>
+                    </button>
+                  </div>
+                </form>
               </div>
-              <button
-                onClick={() => setIsAddWishModalOpen(false)}
-                className="p-1 rounded-full bg-pink-950/80 hover:bg-pink-900 text-pink-200 border border-pink-400/30 transition cursor-pointer"
-              >
-                <X className="w-2.5 h-2.5" />
-              </button>
             </div>
-
-            <form onSubmit={handleSaveCustomWish}>
-              <textarea
-                value={newWishText}
-                onChange={(e) => setNewWishText(e.target.value)}
-                placeholder="Nhập lời chúc 20/10 ngọt ngào gửi người yêu..."
-                rows={2}
-                className="w-full bg-pink-950/50 border border-pink-400/30 rounded-xl p-2 text-pink-100 text-xs placeholder-pink-400/50 focus:outline-none focus:border-pink-400 resize-none mb-2"
-                maxLength={120}
-                required
-              />
-              <div className="flex items-center justify-between">
-                <span className="text-[8px] text-pink-300/70">
-                  {120 - newWishText.length} ký tự
-                </span>
-                <button
-                  type="submit"
-                  className="flex items-center gap-1 px-3.5 py-1 rounded-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-[11px] font-semibold shadow-lg transition cursor-pointer"
-                >
-                  <Send className="w-2.5 h-2.5" />
-                  <span>Gửi Vào Vũ Trụ</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          )}
+        </>
       )}
     </div>
   );
