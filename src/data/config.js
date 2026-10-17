@@ -36,8 +36,44 @@ export const coupleConfig = {
     author: "Bí Mật Đôi Ta ✨",
   },
 
-  // Danh sách bài hát (để trống hoặc tự tải lên mp3)
-  playlist: [],
+  // Danh sách bài hát tình yêu thật 100%
+  playlist: [
+    {
+      id: "real-song-1",
+      title: "Dôi Lời",
+      artist: "Hoàng Dũng",
+      url: "/music/doi-loi.mp3",
+      cover: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?q=80&w=400&auto=format&fit=crop",
+    },
+    {
+      id: "real-song-2",
+      title: "Đừng Làm Trái Tim Anh Đau",
+      artist: "Sơn Tùng M-TP / Obito",
+      url: "/music/dung-lam-trai-tim-anh-dau.mp3",
+      cover: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=400&auto=format&fit=crop",
+    },
+    {
+      id: "real-song-3",
+      title: "Dancing In The Dark",
+      artist: "SOOBIN",
+      url: "/music/dancing-in-the-dark.mp3",
+      cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=400&auto=format&fit=crop",
+    },
+    {
+      id: "real-song-4",
+      title: "Một Ngày Nào Đó",
+      artist: "Hoàng Dũng ft. Đen Vâu",
+      url: "/music/mot-ngay-nao-do.mp3",
+      cover: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=400&auto=format&fit=crop",
+    },
+    {
+      id: "real-song-5",
+      title: "Lý Giải",
+      artist: "Hoàng Dũng",
+      url: "/music/ly-giai.mp3",
+      cover: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=400&auto=format&fit=crop",
+    },
+  ],
 
   // Trạm thử thách lãng mạn trung tính (không chứa tên người lạ)
   gameStages: [
