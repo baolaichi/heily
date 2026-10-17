@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Heart, Gamepad2, CalendarHeart, Mail, Settings, Lock, 
-  Bell, BellRing, ListTodo, Sprout, HeartPulse 
+  Bell, BellRing, ListTodo, Sprout, HeartPulse, ShieldCheck, 
+  KeyRound, Eye, EyeOff, X 
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { useCouple } from '../context/CoupleContext';
-import { getNotificationPermission, requestNotificationPermission, sendLocalNotification } from '../utils/notificationService';
+import { getNotificationPermission, requestNotificationPermission, sendLocalNotification, playNotificationChime } from '../utils/notificationService';
 
 export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
-  const { coupleData, setIsSettingsOpen, myRole, setMyRole } = useCouple();
+  const { coupleData, setIsSettingsOpen, myRole, setMyRole, switchRoleWithPin } = useCouple();
   const [notifyPermission, setNotifyPermission] = useState(() => getNotificationPermission());
+
+  // Modal xác thực mã PIN khi muốn đổi vai trò sang người kia
+  const [pinModalTarget, setPinModalTarget] = useState(null); // 'boy' | 'girl' | null
+  const [pinInput, setPinInput] = useState('');
+  const [showPinText, setShowPinText] = useState(false);
+  const [pinError, setPinError] = useState('');
+  const [isPinShaking, setIsPinShaking] = useState(false);
 
   useEffect(() => {
     setNotifyPermission(getNotificationPermission());
@@ -38,6 +47,40 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
 
   const boyDisplayName = (coupleData.boy?.nickname || coupleData.boy?.name || 'Bug').trim().split(' ').pop();
   const girlDisplayName = (coupleData.girl?.nickname || coupleData.girl?.name || 'Heily').trim().split(' ').pop();
+
+  const handleRoleClick = (targetRole) => {
+    if (targetRole === myRole) {
+      return;
+    }
+    // Muốn chuyển sang tài khoản đối phương -> Bắt buộc nhập mã PIN của đối phương
+    setPinModalTarget(targetRole);
+    setPinInput('');
+    setPinError('');
+    setShowPinText(false);
+  };
+
+  const handleConfirmSwitchPin = (e) => {
+    e.preventDefault();
+    if (!pinModalTarget) return;
+
+    const res = switchRoleWithPin(pinModalTarget, pinInput);
+    if (res && res.success) {
+      confetti({
+        particleCount: 50,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#f43f5e', '#ec4899', '#fb7185', '#ffd166'],
+      });
+      playNotificationChime();
+      setPinModalTarget(null);
+      setPinInput('');
+      setPinError('');
+    } else {
+      setIsPinShaking(true);
+      setPinError(res?.error || 'Mã PIN bảo mật chưa chính xác!');
+      setTimeout(() => setIsPinShaking(false), 500);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 w-full px-2 sm:px-4 pt-safe pb-1.5 transition-all">
@@ -88,33 +131,35 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
             </div>
           </div>
 
-          {/* BỘ CHỌN VAI TRÒ TOÀN CỤC (GLOBAL ROLE SWITCHER - BẠN LÀ AI?) */}
+          {/* BỘ CHỌN VAI TRÒ TOÀN CỤC (GLOBAL ROLE SWITCHER - CÓ PHÂN QUYỀN PIN) */}
           <div className="flex items-center p-0.5 rounded-full bg-rose-100/90 border border-rose-200/90 shadow-2xs shrink-0">
             <button
               type="button"
-              onClick={() => setMyRole('boy')}
+              onClick={() => handleRoleClick('boy')}
               className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 ${
                 myRole === 'boy'
-                  ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-xs scale-102'
-                  : 'text-slate-600 hover:text-rose-600'
+                  ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-xs scale-102 cursor-default'
+                  : 'text-slate-600 hover:text-rose-600 cursor-pointer'
               }`}
-              title={`Bạn đang là ${boyDisplayName}`}
+              title={myRole === 'boy' ? `Bạn đang đăng nhập: ${boyDisplayName} (Đã khóa quyền 🔒)` : `Chuyển sang ${boyDisplayName} (Cần mã PIN)`}
             >
               <span>👑</span>
               <span className="max-w-[42px] sm:max-w-[65px] truncate">{boyDisplayName}</span>
+              {myRole === 'boy' && <ShieldCheck className="w-3 h-3 text-white shrink-0" />}
             </button>
             <button
               type="button"
-              onClick={() => setMyRole('girl')}
+              onClick={() => handleRoleClick('girl')}
               className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 ${
                 myRole === 'girl'
-                  ? 'bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-xs scale-102'
-                  : 'text-slate-600 hover:text-pink-600'
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-xs scale-102 cursor-default'
+                  : 'text-slate-600 hover:text-pink-600 cursor-pointer'
               }`}
-              title={`Bạn đang là ${girlDisplayName}`}
+              title={myRole === 'girl' ? `Bạn đang đăng nhập: ${girlDisplayName} (Đã khóa quyền 🔒)` : `Chuyển sang ${girlDisplayName} (Cần mã PIN)`}
             >
               <span>🎀</span>
               <span className="max-w-[42px] sm:max-w-[65px] truncate">{girlDisplayName}</span>
+              {myRole === 'girl' && <ShieldCheck className="w-3 h-3 text-white shrink-0" />}
             </button>
           </div>
 
@@ -222,6 +267,84 @@ export default function Navbar({ activeTab, setActiveTab, onLockPage }) {
         </div>
 
       </div>
+
+      {/* MODAL XÁC THỰC MÃ PIN BẢO MẬT PHÂN QUYỀN */}
+      {pinModalTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+          <div className={`bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-rose-200 text-center space-y-4 animate-in zoom-in-95 transition-transform ${
+            isPinShaking ? 'animate-shake' : ''
+          }`}>
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-500 mx-auto flex items-center justify-center shadow-inner">
+              <KeyRound className="w-6 h-6" />
+            </div>
+
+            <div className="space-y-1">
+              <h4 className="font-serif font-bold text-base sm:text-lg text-slate-800">
+                Xác Thực Phân Quyền 🔐
+              </h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Bạn đang đăng nhập với tư cách <strong>{myRole === 'boy' ? boyDisplayName : girlDisplayName}</strong>.
+                Để chuyển sang quyền của <strong>{pinModalTarget === 'boy' ? boyDisplayName : girlDisplayName}</strong>, vui lòng nhập mã PIN bảo mật của {pinModalTarget === 'boy' ? boyDisplayName : girlDisplayName}:
+              </p>
+            </div>
+
+            <form onSubmit={handleConfirmSwitchPin} className="space-y-3">
+              <div className="relative">
+                <input
+                  type={showPinText ? 'text' : 'password'}
+                  autoFocus
+                  maxLength={10}
+                  value={pinInput}
+                  onChange={(e) => {
+                    setPinInput(e.target.value);
+                    setPinError('');
+                  }}
+                  placeholder="Nhập mã PIN..."
+                  className="w-full text-center tracking-widest text-base font-bold py-2.5 px-10 rounded-2xl bg-rose-50/60 border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white text-slate-800 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPinText(!showPinText)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1"
+                >
+                  {showPinText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+
+              {pinError && (
+                <p className="text-xs font-semibold text-rose-600 animate-in fade-in">
+                  {pinError}
+                </p>
+              )}
+
+              <p className="text-[11px] text-slate-400">
+                (Mẹo: PIN mặc định là <strong>1234</strong> cho Bug và <strong>5678</strong> cho Heily, có thể đổi trong Cài đặt).
+              </p>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPinModalTarget(null);
+                    setPinInput('');
+                    setPinError('');
+                  }}
+                  className="flex-1 py-2.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={!pinInput.trim()}
+                  className="flex-1 py-2.5 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white text-xs font-bold shadow-md transition disabled:opacity-50"
+                >
+                  Xác Nhận 🚀
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

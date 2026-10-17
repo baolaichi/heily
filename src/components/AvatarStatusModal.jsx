@@ -6,24 +6,23 @@ import {
 import { useCouple } from '../context/CoupleContext';
 import MusicPickerModal from './MusicPickerModal';
 
-export default function AvatarStatusModal({ isOpen, onClose, targetRole = 'boy' }) {
-  const { coupleData, saveCoupleData } = useCouple();
+export default function AvatarStatusModal({ isOpen, onClose }) {
+  const { coupleData, saveCoupleData, myRole } = useCouple();
 
-  const [activeRole, setActiveRole] = useState(targetRole);
+  const activeRole = myRole || 'boy';
   const [statusText, setStatusText] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState('💭');
   const [selectedSong, setSelectedSong] = useState(null);
   const [isMusicPickerOpen, setIsMusicPickerOpen] = useState(false);
 
-  // Sync state whenever modal opens or targetRole changes
+  // Sync state whenever modal opens
   useEffect(() => {
-    setActiveRole(targetRole);
-    const currentPerson = targetRole === 'boy' ? coupleData.boy : coupleData.girl;
+    const currentPerson = activeRole === 'boy' ? coupleData.boy : coupleData.girl;
     const currentStatus = currentPerson?.status || {};
     setStatusText(currentStatus.text || '');
     setSelectedEmoji(currentStatus.emoji || '💭');
     setSelectedSong(currentStatus.song || null);
-  }, [isOpen, targetRole, coupleData]);
+  }, [isOpen, activeRole, coupleData]);
 
   if (!isOpen) return null;
 
@@ -127,52 +126,29 @@ export default function AvatarStatusModal({ isOpen, onClose, targetRole = 'boy' 
 
           <form onSubmit={handleSaveStatus} className="p-4 sm:p-5 space-y-4">
             
-            {/* Chọn người đăng Status */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Cập nhật status cho ai nè?
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleRoleChange('boy')}
-                  className={`p-2.5 rounded-2xl border flex items-center gap-2.5 transition ${
-                    activeRole === 'boy'
-                      ? 'bg-rose-100 border-rose-400 font-bold text-rose-800 shadow-xs'
-                      : 'bg-white border-slate-200 text-slate-600 hover:border-rose-200'
-                  }`}
-                >
-                  <img
-                    src={coupleData.boy.avatar}
-                    alt="boy"
-                    className="w-8 h-8 rounded-full object-cover border border-rose-300 bg-white shrink-0"
-                  />
-                  <div className="text-left min-w-0">
-                    <div className="text-xs truncate">{boyName}</div>
-                    <div className="text-[10px] text-slate-400 font-normal">Chàng trai 👑</div>
+            {/* Danh tính chính chủ đã phân quyền */}
+            <div className="p-3 rounded-2xl bg-rose-100/70 border border-rose-200/90 flex items-center justify-between shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <img
+                  src={activeRole === 'boy' ? coupleData.boy.avatar : coupleData.girl.avatar}
+                  alt={activeRole}
+                  className="w-9 h-9 rounded-full object-cover border-2 border-white shadow-xs"
+                />
+                <div className="text-left">
+                  <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span>{activeRole === 'boy' ? boyName : girlName}</span>
+                    <span className="text-[10px] text-rose-600 bg-rose-200/80 px-2 py-0.2 rounded-full font-semibold">
+                      Chính chủ 🔒
+                    </span>
                   </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleRoleChange('girl')}
-                  className={`p-2.5 rounded-2xl border flex items-center gap-2.5 transition ${
-                    activeRole === 'girl'
-                      ? 'bg-pink-100 border-pink-400 font-bold text-pink-800 shadow-xs'
-                      : 'bg-white border-slate-200 text-slate-600 hover:border-pink-200'
-                  }`}
-                >
-                  <img
-                    src={coupleData.girl.avatar}
-                    alt="girl"
-                    className="w-8 h-8 rounded-full object-cover border border-pink-300 bg-white shrink-0"
-                  />
-                  <div className="text-left min-w-0">
-                    <div className="text-xs truncate">{girlName}</div>
-                    <div className="text-[10px] text-slate-400 font-normal">Cô gái 🎀</div>
+                  <div className="text-[10.5px] text-slate-500 font-medium">
+                    {activeRole === 'boy' ? 'Tài khoản Chàng Trai 👑' : 'Tài khoản Cô Gái 🎀'}
                   </div>
-                </button>
+                </div>
               </div>
+              <span className="text-[10px] text-rose-500 font-medium italic">
+                (Đã xác thực)
+              </span>
             </div>
 
             {/* Ô nhập suy nghĩ */}

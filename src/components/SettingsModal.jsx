@@ -24,10 +24,12 @@ export default function SettingsModal() {
   const [boyName, setBoyName] = useState(coupleData.boy.name);
   const [boyNickname, setBoyNickname] = useState(coupleData.boy.nickname);
   const [boyAvatar, setBoyAvatar] = useState(coupleData.boy.avatar);
+  const [boyPin, setBoyPin] = useState(coupleData.boy.pin || '1234');
 
   const [girlName, setGirlName] = useState(coupleData.girl.name);
   const [girlNickname, setGirlNickname] = useState(coupleData.girl.nickname);
   const [girlAvatar, setGirlAvatar] = useState(coupleData.girl.avatar);
+  const [girlPin, setGirlPin] = useState(coupleData.girl.pin || '5678');
 
   const [startDate, setStartDate] = useState(coupleData.startDate || new Date().toISOString());
   const [quoteText, setQuoteText] = useState(coupleData.romanticQuote.text);
@@ -99,14 +101,18 @@ export default function SettingsModal() {
 
     saveCoupleData({
       boy: {
+        ...coupleData.boy,
         name: boyName,
         nickname: boyNickname,
         avatar: boyAvatar,
+        pin: boyPin.trim() || '1234',
       },
       girl: {
+        ...coupleData.girl,
         name: girlName,
         nickname: girlNickname,
         avatar: girlAvatar,
+        pin: girlPin.trim() || '5678',
       },
       startDate: startDate,
       romanticQuote: {
@@ -307,6 +313,20 @@ export default function SettingsModal() {
                       className="w-full px-3 py-1.5 text-xs rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white"
                     />
                   </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center justify-between">
+                      <span>Mã PIN bảo mật riêng:</span>
+                      <span className="text-[10px] text-rose-500 font-normal">Chống mạo danh 🔒</span>
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      value={boyPin}
+                      onChange={(e) => setBoyPin(e.target.value)}
+                      placeholder="Mặc định: 1234"
+                      className="w-full px-3 py-1.5 text-xs font-mono font-bold tracking-widest rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -351,6 +371,20 @@ export default function SettingsModal() {
                       value={girlNickname}
                       onChange={(e) => setGirlNickname(e.target.value)}
                       className="w-full px-3 py-1.5 text-xs rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center justify-between">
+                      <span>Mã PIN bảo mật riêng:</span>
+                      <span className="text-[10px] text-pink-500 font-normal">Chống mạo danh 🔒</span>
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      value={girlPin}
+                      onChange={(e) => setGirlPin(e.target.value)}
+                      placeholder="Mặc định: 5678"
+                      className="w-full px-3 py-1.5 text-xs font-mono font-bold tracking-widest rounded-xl border border-pink-200 focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white"
                     />
                   </div>
                 </div>

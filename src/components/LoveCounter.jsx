@@ -9,10 +9,22 @@ import AvatarStatusModal from './AvatarStatusModal';
 import LivePhotoWidget from './LivePhotoWidget';
 
 export default function LoveCounter({ onNavigateToGame }) {
-  const { coupleData, setIsSettingsOpen, getClosestEvent, playTrackDirectly } = useCouple();
+  const { coupleData, setIsSettingsOpen, getClosestEvent, playTrackDirectly, myRole } = useCouple();
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [statusTargetRole, setStatusTargetRole] = useState('boy');
+
+  const handleOpenStatusModal = (role) => {
+    if (role !== myRole) {
+      const targetName = role === 'boy' 
+        ? (coupleData.boy?.nickname || coupleData.boy?.name || 'Bug') 
+        : (coupleData.girl?.nickname || coupleData.girl?.name || 'Heily');
+      alert(`Đây là suy nghĩ của ${targetName} 💕\nBạn đang đăng nhập với tài khoản của mình nên chỉ có thể sửa suy nghĩ của chính mình nhé!`);
+      return;
+    }
+    setStatusTargetRole(role);
+    setIsStatusModalOpen(true);
+  };
 
   const boyStatus = coupleData?.boy?.status || {};
   const girlStatus = coupleData?.girl?.status || {};
@@ -111,10 +123,7 @@ export default function LoveCounter({ onNavigateToGame }) {
             {/* Thought Bubble - Chàng trai (Nổi lơ lửng phía trên không làm vỡ khung tròn) */}
             {(boyStatus?.text || boyStatus?.songTitle || (boyStatus?.emoji && boyStatus.emoji !== '💭')) ? (
               <div
-                onClick={() => {
-                  setStatusTargetRole('boy');
-                  setIsStatusModalOpen(true);
-                }}
+                onClick={() => handleOpenStatusModal('boy')}
                 className="absolute top-0 left-1/2 -translate-x-1/2 z-20 cursor-pointer animate-bounce-gentle transition hover:scale-105 active:scale-95"
                 title="Chạm để đổi suy nghĩ / status hôm nay"
               >
@@ -141,10 +150,7 @@ export default function LoveCounter({ onNavigateToGame }) {
               </div>
             ) : (
               <button
-                onClick={() => {
-                  setStatusTargetRole('boy');
-                  setIsStatusModalOpen(true);
-                }}
+                onClick={() => handleOpenStatusModal('boy')}
                 className="absolute top-0.5 left-1/2 -translate-x-1/2 z-20 bg-white/95 hover:bg-rose-50 border border-rose-200 shadow-xs px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] text-rose-600 font-medium flex items-center gap-1 transition hover:scale-105 whitespace-nowrap"
                 title="Thêm suy nghĩ / status"
               >
@@ -155,10 +161,7 @@ export default function LoveCounter({ onNavigateToGame }) {
 
             {/* Avatar Tròn Như Ban Đầu */}
             <div 
-              onClick={() => {
-                setStatusTargetRole('boy');
-                setIsStatusModalOpen(true);
-              }}
+              onClick={() => handleOpenStatusModal('boy')}
               className="relative p-1 sm:p-1.5 rounded-full bg-gradient-to-tr from-rose-400 to-rose-200 shadow-lg group-hover:scale-105 transition-all duration-300 cursor-pointer"
             >
               <img
@@ -195,10 +198,7 @@ export default function LoveCounter({ onNavigateToGame }) {
             {/* Thought Bubble - Cô gái (Nổi lơ lửng phía trên không làm vỡ khung tròn) */}
             {(girlStatus?.text || girlStatus?.songTitle || (girlStatus?.emoji && girlStatus.emoji !== '💭')) ? (
               <div
-                onClick={() => {
-                  setStatusTargetRole('girl');
-                  setIsStatusModalOpen(true);
-                }}
+                onClick={() => handleOpenStatusModal('girl')}
                 className="absolute top-0 left-1/2 -translate-x-1/2 z-20 cursor-pointer animate-bounce-gentle transition hover:scale-105 active:scale-95"
                 title="Chạm để đổi suy nghĩ / status hôm nay"
               >
@@ -225,10 +225,7 @@ export default function LoveCounter({ onNavigateToGame }) {
               </div>
             ) : (
               <button
-                onClick={() => {
-                  setStatusTargetRole('girl');
-                  setIsStatusModalOpen(true);
-                }}
+                onClick={() => handleOpenStatusModal('girl')}
                 className="absolute top-0.5 left-1/2 -translate-x-1/2 z-20 bg-white/95 hover:bg-pink-50 border border-pink-200 shadow-xs px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] text-pink-600 font-medium flex items-center gap-1 transition hover:scale-105 whitespace-nowrap"
                 title="Thêm suy nghĩ / status"
               >
@@ -239,10 +236,7 @@ export default function LoveCounter({ onNavigateToGame }) {
 
             {/* Avatar Tròn Như Ban Đầu */}
             <div 
-              onClick={() => {
-                setStatusTargetRole('girl');
-                setIsStatusModalOpen(true);
-              }}
+              onClick={() => handleOpenStatusModal('girl')}
               className="relative p-1 sm:p-1.5 rounded-full bg-gradient-to-tr from-pink-400 to-rose-200 shadow-lg group-hover:scale-105 transition-all duration-300 cursor-pointer"
             >
               <img

@@ -10,11 +10,13 @@ export const coupleConfig = {
     name: "Chàng Trai",
     nickname: "Anh người yêu 👑",
     avatar: "/images/avatar-boy.svg",
+    pin: "1234",
   },
   girl: {
     name: "Cô Gái",
     nickname: "Bé cưng 🎀",
     avatar: "/images/avatar-girl.svg",
+    pin: "5678",
   },
 
   // Ngày bắt đầu yêu nhau (Mặc định ngày hôm nay, người dùng tự chọn lại)

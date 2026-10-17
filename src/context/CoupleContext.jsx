@@ -47,12 +47,38 @@ export function CoupleProvider({ children }) {
     }
   });
 
+  const [isRoleLocked, setIsRoleLocked] = useState(() => {
+    try {
+      return localStorage.getItem('is_role_locked') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const setMyRole = (newRole) => {
     setMyRoleState(newRole);
     try {
       localStorage.setItem('user_chat_role', newRole);
       localStorage.setItem('puzzle_my_role', newRole);
+      localStorage.setItem('is_role_locked', 'true');
+      setIsRoleLocked(true);
     } catch (e) {}
+  };
+
+  // Xác thực mã PIN để chuyển quyền danh tính sang người kia (chống mạo danh)
+  const switchRoleWithPin = (targetRole, pinInput) => {
+    const expectedPin = targetRole === 'boy' 
+      ? (coupleData.boy?.pin || '1234')
+      : (coupleData.girl?.pin || '5678');
+    
+    if (String(pinInput).trim() === String(expectedPin).trim()) {
+      setMyRole(targetRole);
+      return { success: true };
+    }
+    return { 
+      success: false, 
+      error: 'Mã PIN bảo mật không chính xác! Không thể tự tiện mạo danh người ấy.' 
+    };
   };
 
   const playTrackDirectly = (track) => {
@@ -350,6 +376,8 @@ export function CoupleProvider({ children }) {
         checkCloudUpdates,
         myRole,
         setMyRole,
+        isRoleLocked,
+        switchRoleWithPin,
       }}
     >
       {children}
