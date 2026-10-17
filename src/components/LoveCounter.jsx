@@ -105,10 +105,10 @@ export default function LoveCounter({ onNavigateToGame }) {
         <div className="flex items-center justify-center space-x-3 sm:space-x-6 md:space-x-10 mb-3 sm:mb-4">
           
           {/* Chàng trai */}
-          <div className="flex flex-col items-center group relative pt-4 sm:pt-6">
+          <div className="flex flex-col items-center group relative pt-7 sm:pt-8">
             
-            {/* Thought Bubble - Chàng trai (Nổi lơ lửng không làm vỡ khung tròn) */}
-            {boyStatus?.text ? (
+            {/* Thought Bubble - Chàng trai (Nổi lơ lửng phía trên không làm vỡ khung tròn) */}
+            {(boyStatus?.text || boyStatus?.songTitle || (boyStatus?.emoji && boyStatus.emoji !== '💭')) ? (
               <div
                 onClick={() => {
                   setStatusTargetRole('boy');
@@ -120,7 +120,7 @@ export default function LoveCounter({ onNavigateToGame }) {
                 <div className="bg-white/95 hover:bg-rose-50/95 border border-rose-200/90 shadow-md shadow-rose-200/50 rounded-2xl px-2.5 sm:px-3 py-1 flex items-center gap-1.5 whitespace-nowrap text-slate-800">
                   <span className="text-xs sm:text-sm">{boyStatus.emoji || '💭'}</span>
                   <span className="font-semibold text-[10px] sm:text-xs text-slate-700 max-w-[90px] sm:max-w-[130px] truncate">
-                    {boyStatus.text}
+                    {boyStatus.text || boyStatus.songTitle || 'Đang nghĩ...'}
                   </span>
                   {boyStatus.songTitle && (
                     <span 
@@ -144,11 +144,11 @@ export default function LoveCounter({ onNavigateToGame }) {
                   setStatusTargetRole('boy');
                   setIsStatusModalOpen(true);
                 }}
-                className="absolute top-0 left-1/2 -translate-x-1/2 z-20 bg-white/95 hover:bg-rose-50 border border-rose-200 shadow-xs px-2 py-0.5 rounded-full text-[10px] text-slate-600 hover:text-rose-600 flex items-center gap-1 transition hover:scale-105 whitespace-nowrap"
+                className="absolute top-0.5 left-1/2 -translate-x-1/2 z-20 bg-white/95 hover:bg-rose-50 border border-rose-200 shadow-xs px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] text-rose-600 font-medium flex items-center gap-1 transition hover:scale-105 whitespace-nowrap"
                 title="Thêm suy nghĩ / status"
               >
                 <span>💭</span>
-                <span className="hidden sm:inline font-medium">Nghĩ gì thế?</span>
+                <span>+ Status</span>
               </button>
             )}
 
@@ -189,10 +189,10 @@ export default function LoveCounter({ onNavigateToGame }) {
           </div>
 
           {/* Cô gái */}
-          <div className="flex flex-col items-center group relative pt-4 sm:pt-6">
+          <div className="flex flex-col items-center group relative pt-7 sm:pt-8">
             
-            {/* Thought Bubble - Cô gái (Nổi lơ lửng không làm vỡ khung tròn) */}
-            {girlStatus?.text ? (
+            {/* Thought Bubble - Cô gái (Nổi lơ lửng phía trên không làm vỡ khung tròn) */}
+            {(girlStatus?.text || girlStatus?.songTitle || (girlStatus?.emoji && girlStatus.emoji !== '💭')) ? (
               <div
                 onClick={() => {
                   setStatusTargetRole('girl');
@@ -204,7 +204,7 @@ export default function LoveCounter({ onNavigateToGame }) {
                 <div className="bg-white/95 hover:bg-pink-50/95 border border-pink-200/90 shadow-md shadow-pink-200/50 rounded-2xl px-2.5 sm:px-3 py-1 flex items-center gap-1.5 whitespace-nowrap text-slate-800">
                   <span className="text-xs sm:text-sm">{girlStatus.emoji || '💭'}</span>
                   <span className="font-semibold text-[10px] sm:text-xs text-slate-700 max-w-[90px] sm:max-w-[130px] truncate">
-                    {girlStatus.text}
+                    {girlStatus.text || girlStatus.songTitle || 'Đang nghĩ...'}
                   </span>
                   {girlStatus.songTitle && (
                     <span 
@@ -228,11 +228,11 @@ export default function LoveCounter({ onNavigateToGame }) {
                   setStatusTargetRole('girl');
                   setIsStatusModalOpen(true);
                 }}
-                className="absolute top-0 left-1/2 -translate-x-1/2 z-20 bg-white/95 hover:bg-pink-50 border border-pink-200 shadow-xs px-2 py-0.5 rounded-full text-[10px] text-slate-600 hover:text-pink-600 flex items-center gap-1 transition hover:scale-105 whitespace-nowrap"
+                className="absolute top-0.5 left-1/2 -translate-x-1/2 z-20 bg-white/95 hover:bg-pink-50 border border-pink-200 shadow-xs px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] text-pink-600 font-medium flex items-center gap-1 transition hover:scale-105 whitespace-nowrap"
                 title="Thêm suy nghĩ / status"
               >
                 <span>💭</span>
-                <span className="hidden sm:inline font-medium">Nghĩ gì thế?</span>
+                <span>+ Status</span>
               </button>
             )}
 
@@ -269,8 +269,130 @@ export default function LoveCounter({ onNavigateToGame }) {
             className="inline-flex items-center space-x-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/90 hover:bg-rose-50 border border-rose-200 shadow-xs text-[11px] sm:text-xs font-medium text-rose-600 hover:text-rose-700 transition active:scale-95"
           >
             <Edit3 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            <span>Tùy chỉnh</span>
+            <span>Tùy chỉnh thông tin</span>
           </button>
+        </div>
+
+        {/* Thẻ Trạng Thái & Giai Điệu Đôi Ta Hôm Nay (Hiển thị nổi bật trên màn hình) */}
+        <div className="max-w-2xl mx-auto mb-4 px-2 sm:px-0">
+          <div className="glass-card rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-rose-200/90 shadow-sm bg-white/85 backdrop-blur-md">
+            <div className="flex items-center justify-between mb-2.5 px-1 border-b border-rose-100/80 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm sm:text-base">💭</span>
+                <span className="font-bold text-xs sm:text-sm text-slate-800">Trạng Thái Đôi Ta Hôm Nay</span>
+                <span className="text-[9px] bg-rose-100 text-rose-600 font-bold px-2 py-0.5 rounded-full">
+                  Realtime
+                </span>
+              </div>
+              <span className="text-[10px] sm:text-[11px] text-slate-400">
+                Chạm để đổi suy nghĩ
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              {/* Box Chàng Trai */}
+              <div
+                onClick={() => {
+                  setStatusTargetRole('boy');
+                  setIsStatusModalOpen(true);
+                }}
+                className="p-2.5 rounded-2xl bg-gradient-to-br from-rose-50/90 to-white border border-rose-200/80 hover:border-rose-300 transition cursor-pointer text-left group"
+              >
+                <div className="flex items-start gap-2.5">
+                  <img
+                    src={coupleData.boy.avatar}
+                    alt={coupleData.boy.name}
+                    className="w-9 h-9 rounded-full object-cover border-2 border-rose-300 shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-800 truncate">
+                        {coupleData.boy.nickname || coupleData.boy.name} 👑
+                      </span>
+                      <span className="text-[10px] text-rose-500 font-semibold group-hover:underline shrink-0">
+                        Chỉnh sửa
+                      </span>
+                    </div>
+
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-700">
+                      <span className="text-sm">{boyStatus?.emoji || '💭'}</span>
+                      <p className="font-medium truncate">
+                        {boyStatus?.text || (
+                          <span className="text-slate-400 italic">Chưa đăng suy nghĩ hôm nay...</span>
+                        )}
+                      </p>
+                    </div>
+
+                    {boyStatus?.songTitle && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (boyStatus.song) playTrackDirectly(boyStatus.song);
+                        }}
+                        className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100/90 hover:bg-rose-200 text-rose-700 text-[10px] font-semibold max-w-full transition"
+                      >
+                        <Music className="w-2.5 h-2.5 animate-spin-slow shrink-0" />
+                        <span className="truncate">{boyStatus.songTitle}</span>
+                        <Play className="w-2.5 h-2.5 fill-rose-600 shrink-0 ml-0.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Box Cô Gái */}
+              <div
+                onClick={() => {
+                  setStatusTargetRole('girl');
+                  setIsStatusModalOpen(true);
+                }}
+                className="p-2.5 rounded-2xl bg-gradient-to-br from-pink-50/90 to-white border border-pink-200/80 hover:border-pink-300 transition cursor-pointer text-left group"
+              >
+                <div className="flex items-start gap-2.5">
+                  <img
+                    src={coupleData.girl.avatar}
+                    alt={coupleData.girl.name}
+                    className="w-9 h-9 rounded-full object-cover border-2 border-pink-300 shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-800 truncate">
+                        {coupleData.girl.nickname || coupleData.girl.name} 🎀
+                      </span>
+                      <span className="text-[10px] text-pink-500 font-semibold group-hover:underline shrink-0">
+                        Chỉnh sửa
+                      </span>
+                    </div>
+
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-700">
+                      <span className="text-sm">{girlStatus?.emoji || '💭'}</span>
+                      <p className="font-medium truncate">
+                        {girlStatus?.text || (
+                          <span className="text-slate-400 italic">Chưa đăng suy nghĩ hôm nay...</span>
+                        )}
+                      </p>
+                    </div>
+
+                    {girlStatus?.songTitle && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (girlStatus.song) playTrackDirectly(girlStatus.song);
+                        }}
+                        className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pink-100/90 hover:bg-pink-200 text-pink-700 text-[10px] font-semibold max-w-full transition"
+                      >
+                        <Music className="w-2.5 h-2.5 animate-spin-slow shrink-0" />
+                        <span className="truncate">{girlStatus.songTitle}</span>
+                        <Play className="w-2.5 h-2.5 fill-pink-600 shrink-0 ml-0.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Romantic Quote */}
