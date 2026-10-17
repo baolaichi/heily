@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Heart, Sparkles, Gift, ArrowRight, Flame,
-  Edit3, Calendar, ChevronDown, ChevronUp, Plus, Clock, Music
+  Edit3, Calendar, ChevronDown, ChevronUp, Plus, Clock, Music, Play
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import { formatVietnameseFull, formatVietnameseShort } from '../utils/dateUtils';
