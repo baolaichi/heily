@@ -10,7 +10,7 @@ import {
 } from '../../utils/cloudSync';
 
 export default function PuzzleGame() {
-  const { coupleData, myRole, setMyRole } = useCouple();
+  const { coupleData, myRole } = useCouple();
 
   // Mode: 'solo' | 'online'
   const [playMode, setPlayMode] = useState('online');
@@ -84,14 +84,6 @@ export default function PuzzleGame() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isCompleted]);
-
-  // Lưu role vào localStorage
-  const handleRoleChange = (role) => {
-    setMyRole(role);
-    try {
-      localStorage.setItem('puzzle_my_role', role);
-    } catch {}
-  };
 
   // Đồng bộ Online Realtime qua Firebase
   useEffect(() => {
@@ -337,35 +329,13 @@ export default function PuzzleGame() {
           </div>
         </div>
 
-        {/* Khi chơi Online: Cho phép chọn nhân vật */}
+        {/* Khi chơi Online: Hiển thị nhân vật theo tài khoản Header */}
         {playMode === 'online' && (
           <div className="pt-2 border-t border-rose-200/60 flex items-center justify-between flex-wrap gap-2 text-xs">
-            <span className="text-slate-600 font-medium">Bạn đang điều khiển vai:</span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleRoleChange('boy')}
-                className={`px-2.5 py-1 rounded-full flex items-center gap-1.5 border transition ${
-                  myRole === 'boy'
-                    ? 'bg-rose-500 text-white border-rose-500 font-bold shadow-xs'
-                    : 'bg-white text-slate-700 border-rose-200 hover:bg-rose-50'
-                }`}
-              >
-                <span>👑</span>
-                <span>{boyName}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRoleChange('girl')}
-                className={`px-2.5 py-1 rounded-full flex items-center gap-1.5 border transition ${
-                  myRole === 'girl'
-                    ? 'bg-pink-500 text-white border-pink-500 font-bold shadow-xs'
-                    : 'bg-white text-slate-700 border-pink-200 hover:bg-pink-50'
-                }`}
-              >
-                <span>🎀</span>
-                <span>{girlName}</span>
-              </button>
+            <span className="text-slate-600 font-medium">Tài khoản điều khiển:</span>
+            <div className="px-3 py-0.5 rounded-full bg-white text-slate-800 border border-rose-200 shadow-2xs font-bold flex items-center gap-1.5">
+              <span>{myRole === 'boy' ? '👑' : '🎀'}</span>
+              <span>{myRole === 'boy' ? boyName : girlName}</span>
             </div>
           </div>
         )}

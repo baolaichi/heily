@@ -9,7 +9,7 @@ import { syncPushGameState, syncPullGameState, subscribeToGame } from '../utils/
 import { playNotificationChime } from '../utils/notificationService';
 
 export default function LovePlant() {
-  const { coupleData, myRole, setMyRole } = useCouple();
+  const { coupleData, myRole } = useCouple();
 
   // State cây tình yêu khởi đầu từ Hạt Mầm (Cấp 1 - 0 EXP)
   const [plantData, setPlantData] = useState({
@@ -182,13 +182,6 @@ export default function LovePlant() {
     }
   };
 
-  const handleRoleChange = (role) => {
-    setMyRole(role);
-    try {
-      localStorage.setItem('user_chat_role', role);
-    } catch {}
-  };
-
   return (
     <div className="py-4 max-w-2xl mx-auto space-y-6 text-center animate-in fade-in">
       
@@ -204,33 +197,6 @@ export default function LovePlant() {
         <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto">
           Mỗi ngày hai bạn cùng vào trả lời câu hỏi đôi và tưới nước để cây tình yêu lớn lên và đơm hoa rực rỡ!
         </p>
-      </div>
-
-      {/* Role Picker */}
-      <div className="flex items-center justify-center gap-2 text-xs">
-        <span className="text-slate-500 font-medium">Bạn đang là:</span>
-        <button
-          type="button"
-          onClick={() => handleRoleChange('boy')}
-          className={`px-3 py-1 rounded-full font-bold transition flex items-center gap-1 ${
-            myRole === 'boy'
-              ? 'bg-rose-500 text-white shadow-xs'
-              : 'bg-white text-slate-700 border border-rose-100'
-          }`}
-        >
-          <span>👑 {boyName}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => handleRoleChange('girl')}
-          className={`px-3 py-1 rounded-full font-bold transition flex items-center gap-1 ${
-            myRole === 'girl'
-              ? 'bg-pink-500 text-white shadow-xs'
-              : 'bg-white text-slate-700 border border-pink-100'
-          }`}
-        >
-          <span>🎀 {girlName}</span>
-        </button>
       </div>
 
       {/* KHU VỰC CÂY TRỒNG TÌNH YÊU (VIRTUAL LOVE PLANT DISPLAY) */}

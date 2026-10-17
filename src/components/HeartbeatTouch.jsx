@@ -9,7 +9,7 @@ import { syncPushGameState, syncPullGameState, subscribeToGame } from '../utils/
 import { playNotificationChime } from '../utils/notificationService';
 
 export default function HeartbeatTouch() {
-  const { coupleData, myRole, setMyRole } = useCouple();
+  const { coupleData, myRole } = useCouple();
 
   const [isMyTouching, setIsMyTouching] = useState(false);
   const [isPartnerTouching, setIsPartnerTouching] = useState(false);
@@ -139,13 +139,6 @@ export default function HeartbeatTouch() {
     });
   };
 
-  const handleRoleChange = (role) => {
-    setMyRole(role);
-    try {
-      localStorage.setItem('user_chat_role', role);
-    } catch {}
-  };
-
   return (
     <div className="py-4 max-w-2xl mx-auto space-y-6 text-center animate-in fade-in">
       
@@ -163,36 +156,14 @@ export default function HeartbeatTouch() {
         </p>
       </div>
 
-      {/* Role Picker & Connection Status */}
+      {/* Connection Status & Current User */}
       <div className="glass-card p-3 rounded-2xl border border-rose-200/90 shadow-xs flex items-center justify-between flex-wrap gap-2 text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-slate-500 font-medium">Bạn là:</span>
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => handleRoleChange('boy')}
-              className={`px-3 py-1 rounded-full font-bold transition flex items-center gap-1 ${
-                myRole === 'boy'
-                  ? 'bg-rose-500 text-white shadow-xs'
-                  : 'bg-white text-slate-700 border border-rose-100 hover:bg-rose-50'
-              }`}
-            >
-              <span>👑</span>
-              <span>{boyName}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRoleChange('girl')}
-              className={`px-3 py-1 rounded-full font-bold transition flex items-center gap-1 ${
-                myRole === 'girl'
-                  ? 'bg-pink-500 text-white shadow-xs'
-                  : 'bg-white text-slate-700 border border-pink-100 hover:bg-pink-50'
-              }`}
-            >
-              <span>🎀</span>
-              <span>{girlName}</span>
-            </button>
-          </div>
+          <span className="text-slate-500 font-medium">Tài khoản:</span>
+          <span className="px-3 py-1 rounded-full font-bold bg-white text-slate-800 border border-rose-200 shadow-2xs flex items-center gap-1.5">
+            <span>{myRole === 'boy' ? '👑' : '🎀'}</span>
+            <span>{myRole === 'boy' ? boyName : girlName}</span>
+          </span>
         </div>
 
         {/* Trạng thái đối phương */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   MessageCircle, Send, Heart, X, Image, Trash2, 
-  Smile, Sparkles, UserCheck, RefreshCw, ChevronDown, CheckCheck
+  Smile, Sparkles, RefreshCw, ChevronDown, CheckCheck
 } from 'lucide-react';
 import { useCouple } from '../context/CoupleContext';
 import { 
@@ -14,14 +14,13 @@ const CHAT_ROLE_KEY = 'bimatdoita_chat_sender_role';
 const LAST_READ_KEY = 'bimatdoita_chat_last_read';
 
 export default function CoupleChat() {
-  const { coupleData, myRole, setMyRole } = useCouple();
+  const { coupleData, myRole } = useCouple();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [showRolePicker, setShowRolePicker] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [floatingHearts, setFloatingHearts] = useState([]);
 
@@ -37,7 +36,6 @@ export default function CoupleChat() {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setIsOpen(false);
-        setShowRolePicker(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -142,14 +140,6 @@ export default function CoupleChat() {
     }, 100);
   };
 
-  const handleSelectRole = (role) => {
-    setMyRole(role);
-    try {
-      localStorage.setItem(CHAT_ROLE_KEY, role);
-    } catch {}
-    setShowRolePicker(false);
-  };
-
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -162,11 +152,6 @@ export default function CoupleChat() {
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
     if (!inputText.trim() && !selectedImage) return;
-
-    if (!userRole) {
-      setShowRolePicker(true);
-      return;
-    }
 
     setIsSending(true);
     try {
@@ -201,11 +186,6 @@ export default function CoupleChat() {
   };
 
   const handleSendHeartBomb = async () => {
-    if (!userRole) {
-      setShowRolePicker(true);
-      return;
-    }
-
     // Spawn tim trên màn hình hiện tại
     triggerScreenHearts();
 
@@ -242,10 +222,6 @@ export default function CoupleChat() {
   };
 
   const handleReact = async (msgId, emoji) => {
-    if (!userRole) {
-      setShowRolePicker(true);
-      return;
-    }
     await syncReactToMessage(msgId, userRole, emoji);
   };
 
@@ -278,7 +254,6 @@ export default function CoupleChat() {
         id="chat-trigger-btn"
         onClick={() => {
           setIsOpen(!isOpen);
-          if (!userRole) setShowRolePicker(true);
         }}
         className="fixed bottom-24 right-4 sm:bottom-6 sm:left-6 sm:right-auto z-40 group flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white rounded-full shadow-lg shadow-rose-400/40 hover:shadow-xl hover:shadow-rose-400/60 active:scale-95 transition-all duration-300 border border-white/40 backdrop-blur-md"
         aria-label="Mở khung chat đôi ta"
@@ -330,13 +305,10 @@ export default function CoupleChat() {
                     Hộp Chat Đôi Ta
                     <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                   </h3>
-                  <button
-                    onClick={() => setShowRolePicker(true)}
-                    className="text-[11px] text-rose-100 hover:text-white flex items-center gap-1 mt-0.5 underline decoration-dotted"
-                  >
-                    Là: <span className="font-bold">{currentName}</span>
-                    <RefreshCw className="w-2.5 h-2.5 ml-0.5 opacity-80" />
-                  </button>
+                  <div className="text-[11px] text-rose-100 flex items-center gap-1 mt-0.5">
+                    <span>Bạn là:</span>
+                    <span className="font-bold text-white bg-white/20 px-2 py-0.2 rounded-full">{currentName}</span>
+                  </div>
                 </div>
               </div>
 
@@ -557,61 +529,6 @@ export default function CoupleChat() {
                 <Send className="w-4 h-4" />
               </button>
             </form>
-
-            {/* BẢNG CHỌN DANH TÍNH (Role Picker Modal) */}
-            {showRolePicker && (
-              <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm z-30 flex items-center justify-center p-4 animate-in fade-in">
-                <div className="bg-white rounded-2xl p-5 w-full max-w-xs text-center border border-rose-200 shadow-2xl">
-                  <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-500 mx-auto flex items-center justify-center mb-3">
-                    <UserCheck className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-bold text-slate-800 text-base mb-1">Bạn là ai nè? 🥰</h4>
-                  <p className="text-xs text-slate-500 mb-4">
-                    Chọn danh tính để tin nhắn hiển thị đúng tên và ảnh đại diện của bạn nhé:
-                  </p>
-
-                  <div className="space-y-2.5">
-                    <button
-                      onClick={() => handleSelectRole('boy')}
-                      className={`w-full p-2.5 rounded-xl border flex items-center gap-3 transition ${
-                        userRole === 'boy'
-                          ? 'border-rose-500 bg-rose-50/80 text-rose-700 font-bold'
-                          : 'border-slate-200 hover:border-rose-300 text-slate-700'
-                      }`}
-                    >
-                      <img
-                        src={boyAvatar}
-                        alt="boy"
-                        className="w-9 h-9 rounded-full object-cover border border-rose-300 bg-white"
-                      />
-                      <div className="text-left flex-1">
-                        <div className="text-xs font-semibold text-slate-800">{boyName}</div>
-                        <div className="text-[10px] text-slate-500">Chàng trai 👑</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => handleSelectRole('girl')}
-                      className={`w-full p-2.5 rounded-xl border flex items-center gap-3 transition ${
-                        userRole === 'girl'
-                          ? 'border-pink-500 bg-pink-50/80 text-pink-700 font-bold'
-                          : 'border-slate-200 hover:border-pink-300 text-slate-700'
-                      }`}
-                    >
-                      <img
-                        src={girlAvatar}
-                        alt="girl"
-                        className="w-9 h-9 rounded-full object-cover border border-pink-300 bg-white"
-                      />
-                      <div className="text-left flex-1">
-                        <div className="text-xs font-semibold text-slate-800">{girlName}</div>
-                        <div className="text-[10px] text-slate-500">Cô gái 🎀</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
 
           </div>
         </>

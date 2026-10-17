@@ -36,7 +36,7 @@ function timeAgo(dateString) {
 }
 
 export default function LivePhotoWidget() {
-  const { coupleData, myRole, setMyRole } = useCouple();
+  const { coupleData, myRole } = useCouple();
 
   const boyName = coupleData.boy.nickname || coupleData.boy.name || 'Bug';
   const girlName = coupleData.girl.nickname || coupleData.girl.name || 'Heily';

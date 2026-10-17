@@ -39,15 +39,6 @@ export default function AvatarStatusModal({ isOpen, onClose }) {
     { emoji: '🌸', label: 'Bình yên' },
   ];
 
-  const handleRoleChange = (role) => {
-    setActiveRole(role);
-    const person = role === 'boy' ? coupleData.boy : coupleData.girl;
-    const st = person?.status || {};
-    setStatusText(st.text || '');
-    setSelectedEmoji(st.emoji || '💭');
-    setSelectedSong(st.song || null);
-  };
-
   const handleSaveStatus = (e) => {
     e.preventDefault();
     const newStatus = {

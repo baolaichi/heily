@@ -10,17 +10,10 @@ import {
 } from '../../utils/cloudSync';
 
 export default function TicTacToeGame() {
-  const { coupleData } = useCouple();
+  const { coupleData, myRole } = useCouple();
 
   // Mode: 'online' | 'local'
   const [playMode, setPlayMode] = useState('online');
-  const [myRole, setMyRole] = useState(() => {
-    try {
-      return localStorage.getItem('tictactoe_my_role') || 'boy';
-    } catch {
-      return 'boy';
-    }
-  });
 
   const [board, setBoard] = useState(Array(9).fill(null));
   const [isXNext, setIsXNext] = useState(true); // X = Boy, O = Girl
@@ -36,14 +29,6 @@ export default function TicTacToeGame() {
     "Hát một đoạn nhạc tình ca ngọt ngào tặng người yêu 🎤",
     "Được làm nũng và người kia phải chiều theo ý bạn hôm nay 👑",
   ];
-
-  // Lưu role
-  const handleRoleChange = (role) => {
-    setMyRole(role);
-    try {
-      localStorage.setItem('tictactoe_my_role', role);
-    } catch {}
-  };
 
   // Đồng bộ Online Realtime qua Firebase
   useEffect(() => {
@@ -208,30 +193,11 @@ export default function TicTacToeGame() {
           </div>
 
           {playMode === 'online' && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-500">Bạn là:</span>
-              <button
-                type="button"
-                onClick={() => handleRoleChange('boy')}
-                className={`px-2 py-0.5 rounded-lg border transition ${
-                  myRole === 'boy'
-                    ? 'bg-rose-500 text-white font-bold border-rose-500'
-                    : 'bg-white text-slate-700 border-slate-200'
-                }`}
-              >
-                👑 {boyName} (X)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRoleChange('girl')}
-                className={`px-2 py-0.5 rounded-lg border transition ${
-                  myRole === 'girl'
-                    ? 'bg-pink-500 text-white font-bold border-pink-500'
-                    : 'bg-white text-slate-700 border-slate-200'
-                }`}
-              >
-                💖 {girlName} (O)
-              </button>
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-slate-500">Tài khoản:</span>
+              <div className="px-2.5 py-0.5 rounded-lg border border-rose-200 bg-white font-bold text-slate-800 flex items-center gap-1">
+                {myRole === 'boy' ? `👑 ${boyName} (X)` : `💖 ${girlName} (O)`}
+              </div>
             </div>
           )}
         </div>
