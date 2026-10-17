@@ -94,24 +94,30 @@ export async function sendLocalNotification({ title, body, icon = '/img/logo.png
     ...(image ? { image } : {}),
   };
 
-  try {
-    // Thử gửi thông qua Service Worker (hiển thị tốt cả khi ẩn trình duyệt trên Android/iOS PWA)
-    if ('serviceWorker' in navigator) {
-      const reg = await navigator.serviceWorker.getRegistration();
+  // Ưu tiên Service Worker (bắt buộc đối với Chrome trên Android để hiển thị notification)
+  if ('serviceWorker' in navigator) {
+    try {
+      let reg = await navigator.serviceWorker.getRegistration();
+      if (!reg || !reg.active) {
+        reg = await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise((resolve) => setTimeout(() => resolve(null), 1200))
+        ]);
+      }
       if (reg && reg.showNotification) {
         await reg.showNotification(title, options);
         return;
       }
+    } catch (e) {
+      console.warn('Lỗi gửi qua Service Worker:', e);
     }
-  } catch (e) {
-    console.warn('Lỗi gửi qua Service Worker, dùng Notification API:', e);
   }
 
-  // Fallback sang Web Notification chuẩn
+  // Fallback sang Web Notification chuẩn (cho Desktop Chrome/Firefox/Edge/Safari)
   try {
     new Notification(title, options);
   } catch (e) {
-    console.warn('Không thể gửi thông báo:', e);
+    console.warn('Không thể gửi thông báo qua Notification API:', e);
   }
 }
 

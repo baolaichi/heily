@@ -79,11 +79,8 @@ export default function LivePhotoWidget() {
 
   const fileInputRef = useRef(null);
   const lastTimestampRef = useRef(locketData.current?.timestamp || '');
-  const lastReactionKeyRef = useRef(
-    locketData.current?.reactions?.[partnerRole] 
-      ? `${locketData.current?.id}_${locketData.current.reactions[partnerRole]}` 
-      : ''
-  );
+  const lastReactionTimeRef = useRef(Date.now());
+  const lastReactionKeyRef = useRef('');
 
   // Tự tắt Toast sau 5 giây
   useEffect(() => {
@@ -136,8 +133,9 @@ export default function LivePhotoWidget() {
       if (remote && remote.current) {
         setLocketData(remote);
         lastTimestampRef.current = remote.current.timestamp;
-        const initPartnerEmoji = remote.current.reactions?.[partnerRole];
-        lastReactionKeyRef.current = initPartnerEmoji ? `${remote.current.id}_${initPartnerEmoji}` : '';
+        if (remote.lastReactionUpdate && remote.lastReactionUpdate.timestamp) {
+          lastReactionTimeRef.current = remote.lastReactionUpdate.timestamp;
+        }
         try {
           localStorage.setItem('heily_locket_photo', JSON.stringify(remote));
         } catch (e) {}
@@ -146,10 +144,10 @@ export default function LivePhotoWidget() {
 
     // 2. Lắng nghe cập nhật realtime
     const unsubscribe = subscribeToGame('locket_photo', (remote) => {
-      if (!remote || !remote.current) return;
+      if (!remote) return;
 
       // a. Nếu có ảnh mới từ người kia: thông báo Web Push + rung + phát âm thanh + Toast
-      if (remote.current.timestamp && remote.current.timestamp !== lastTimestampRef.current) {
+      if (remote.current && remote.current.timestamp && remote.current.timestamp !== lastTimestampRef.current) {
         const isFirstLoad = !lastTimestampRef.current;
         lastTimestampRef.current = remote.current.timestamp;
         
@@ -169,7 +167,7 @@ export default function LivePhotoWidget() {
             colors: ['#f43f5e', '#ec4899', '#fb7185', '#ffd166'],
           });
 
-          // Gửi thông báo hệ thống Web Push (xuất hiện cả trên thanh thông báo điện thoại)
+          // Gửi thông báo hệ thống Web Push (hiển thị trên thanh thông báo điện thoại)
           notifyNewLocketPhoto(
             remote.current.senderName || partnerName, 
             remote.current.caption, 
@@ -185,35 +183,35 @@ export default function LivePhotoWidget() {
         }
       }
 
-      // b. Kiểm tra nếu đối phương vừa thả hoặc đổi cảm xúc vào ảnh của mình
-      if (remote.current && remote.current.senderRole === myRole) {
-        const partnerEmoji = remote.current.reactions?.[partnerRole];
-        const newReactionKey = partnerEmoji ? `${remote.current.id}_${partnerEmoji}` : '';
-        
-        if (newReactionKey && newReactionKey !== lastReactionKeyRef.current) {
-          if (lastReactionKeyRef.current !== undefined && lastReactionKeyRef.current !== '') {
-            playNotificationChime();
-            confetti({
-              particleCount: 25,
-              spread: 50,
-              origin: { y: 0.7 },
-              colors: ['#f43f5e', '#ec4899', '#fb7185'],
-            });
+      // b. Kiểm tra nếu đối phương vừa thả hoặc đổi cảm xúc vào ảnh Locket
+      if (remote.lastReactionUpdate && remote.lastReactionUpdate.timestamp) {
+        const { byRole, byName, emoji, caption, timestamp } = remote.lastReactionUpdate;
+        if (byRole !== myRole && timestamp > lastReactionTimeRef.current) {
+          lastReactionTimeRef.current = timestamp;
 
-            // Gửi thông báo hệ thống Web Push
-            notifyLocketReaction(
-              partnerName, 
-              partnerEmoji, 
-              remote.current.caption
-            );
-
-            // Toast nổi
-            setInAppToast({
-              title: `${partnerEmoji} ${partnerName} đã thả cảm xúc!`,
-              body: remote.current.caption ? `Biểu cảm "${partnerEmoji}" cho ảnh: "${remote.current.caption}"` : `Đã thả biểu cảm ${partnerEmoji} lên ảnh của bạn 💕`,
-            });
+          playNotificationChime();
+          if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+            navigator.vibrate([120, 80, 150]);
           }
-          lastReactionKeyRef.current = newReactionKey;
+          confetti({
+            particleCount: 30,
+            spread: 55,
+            origin: { y: 0.7 },
+            colors: ['#f43f5e', '#ec4899', '#fb7185', '#ffd166'],
+          });
+
+          // Gửi thông báo hệ thống Web Push tới điện thoại
+          notifyLocketReaction(
+            byName || partnerName, 
+            emoji, 
+            caption
+          );
+
+          // Toast nổi ngay trên màn hình
+          setInAppToast({
+            title: `${emoji} ${byName || partnerName} đã thả cảm xúc!`,
+            body: caption ? `Biểu cảm "${emoji}" cho ảnh: "${caption}"` : `Đã thả biểu cảm ${emoji} lên ảnh của bạn 💕`,
+          });
         }
       }
 
@@ -228,11 +226,36 @@ export default function LivePhotoWidget() {
     };
   }, [myRole, partnerRole, partnerName]);
 
+  // Lắng nghe khi mở lại tab hoặc bật sáng màn hình điện thoại
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncPullGameState('locket_photo').then((remote) => {
+          if (!remote) return;
+          if (remote.lastReactionUpdate && remote.lastReactionUpdate.timestamp) {
+            const { byRole, byName, emoji, caption, timestamp } = remote.lastReactionUpdate;
+            if (byRole !== myRole && timestamp > lastReactionTimeRef.current) {
+              lastReactionTimeRef.current = timestamp;
+              notifyLocketReaction(byName || partnerName, emoji, caption);
+              setInAppToast({
+                title: `${emoji} ${byName || partnerName} đã thả cảm xúc!`,
+                body: caption ? `Biểu cảm "${emoji}" cho ảnh: "${caption}"` : `Đã thả biểu cảm ${emoji} lên ảnh của bạn 💕`,
+              });
+            }
+          }
+          setLocketData(remote);
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [myRole, partnerName]);
+
   // Bật/Kiểm tra quyền thông báo cho Locket
   const handleToggleNotification = async () => {
     if (notificationStatus === 'granted') {
       playNotificationChime();
-      notifyNewLocketPhoto('Locket Đôi Ta', 'Thông báo Locket đang hoạt động rất tốt! 🔔');
+      notifyNewLocketPhoto('Locket Đôi Ta', 'Thông báo Locket đang hoạt động rất tốt trên thiết bị của bạn! 🔔');
       return;
     }
     const granted = await requestNotificationPermission();
@@ -382,12 +405,24 @@ export default function LivePhotoWidget() {
       newHistory = newHistory.map(p => p.id === activePhoto.id ? updatedPhoto : p);
     }
 
+    const myDisplayName = myRole === 'boy' ? boyName : girlName;
+    const nowTimestamp = Date.now();
+
     const updatedData = {
       current: newCurrent,
       history: newHistory,
+      lastReactionUpdate: {
+        photoId: activePhoto.id,
+        byRole: myRole,
+        byName: myDisplayName,
+        emoji: emoji,
+        caption: activePhoto.caption || '',
+        timestamp: nowTimestamp,
+      }
     };
 
     setLocketData(updatedData);
+    lastReactionTimeRef.current = nowTimestamp;
     try {
       localStorage.setItem('heily_locket_photo', JSON.stringify(updatedData));
     } catch (e) {}
